@@ -120,7 +120,7 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-CAFE_DOC_TAGS = {"restaurant", "auth", "media"}
+CAFE_DOC_TAGS = {"park", "auth", "media"}
 
 
 def custom_openapi():
@@ -208,8 +208,8 @@ async def token_helper():
                     document.getElementById('tokenStatus').innerHTML = 'Getting token...';
                     
                     const formData = new FormData();
-                    formData.append('username', 'admin@travel.link360.vn');
-                    formData.append('password', 'admin123');
+                    formData.append('username', 'test@park.com');
+                    formData.append('password', 'test123');
                     formData.append('tenant_code', 'demo');
                     
                     const response = await fetch('/api/v1/auth/login', {

@@ -61,24 +61,20 @@ const Login: React.FC = () => {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('tenant_id', userData.tenant_id?.toString() || '1');
 
-      // Step 3: Set default tenant for single-tenant setup (skip tenant API call)
-      localStorage.setItem('tenant_code', 'boton_blue');
-      localStorage.setItem('tenant_name', 'Boton Blue Restaurant');
-
-      // Step 4: Get user's service access
+      // Step 3: Get user's service access
       const servicesResponse = await authAPI.getUserServices();
       localStorage.setItem('service_access', servicesResponse.service_access.toString());
       localStorage.setItem('available_services', JSON.stringify(servicesResponse.available_services));
 
-      // Step 5: Update authentication state
+      // Step 4: Update authentication state
       login();
       
-      // Step 6: Show success message and navigate to Restaurant dashboard
+      // Step 5: Show success message and navigate to the park dashboard
       toast.success(`Welcome back, ${userData.full_name}!`);
       
-      // Navigate directly to Restaurant dashboard
+      // Navigate directly to the park dashboard
       setTimeout(() => {
-        navigate('/restaurant', { replace: true });
+        navigate('/park', { replace: true });
       }, 100);
       
     } catch (err: any) {
@@ -118,8 +114,8 @@ const Login: React.FC = () => {
       <div className="bg-white w-full max-w-md py-12 px-9 rounded-2xl shadow-2xl">
         
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">VR Restaurant Dashboard Login</h2>
-          <p className="text-sm text-gray-500 mt-2">Travel Link | VR Restaurant | Management</p>
+          <h2 className="text-2xl font-bold text-gray-800">Adventure Park Admin Login</h2>
+          <p className="text-sm text-gray-500 mt-2">Travel Link | Adventure Park | Management</p>
         </div>
 
         {error && (

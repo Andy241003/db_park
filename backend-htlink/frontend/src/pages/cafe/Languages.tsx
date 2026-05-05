@@ -346,7 +346,7 @@ const RestaurantLanguages: React.FC = () => {
         </div>
 
         <p className="mb-5 text-sm text-slate-500">
-          Configure timezone and regional display preferences for your restaurant.
+          Configure timezone and regional display preferences for your amusement park.
         </p>
 
         {/* Timezone */}

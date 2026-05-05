@@ -1,6 +1,6 @@
 """
 Restaurant Languages API.
-Manage supported languages for restaurant (stored in restaurant settings JSON).
+Manage supported languages for Restaurant (stored in Restaurant settings JSON).
 """
 from typing import List
 from fastapi import APIRouter, HTTPException
@@ -44,7 +44,7 @@ def get_or_create_settings(db: SessionDep, tenant_id: int) -> CafeSettings:
     if not settings:
         settings = CafeSettings(
             tenant_id=tenant_id,
-            restaurant_name="My Restaurant",
+            park_name="My Restaurant",
             primary_color="#6f4e37",
             secondary_color="#d4a574",
             background_color="#ffffff",
@@ -87,8 +87,8 @@ def get_restaurant_languages(
     current_user: CurrentUser
 ):
     """
-    Get all supported languages for the restaurant.
-    Languages are stored in restaurant settings JSON.
+    Get all supported languages for the Restaurant.
+    Languages are stored in Restaurant settings JSON.
     """
     settings = get_or_create_settings(db, current_user.tenant_id)
     languages = get_supported_languages(settings)
@@ -108,7 +108,7 @@ def add_restaurant_language(
     language_in: LanguageCreate
 ):
     """
-    Add a new language to the restaurant.
+    Add a new language to the Restaurant.
     """
     settings = get_or_create_settings(db, current_user.tenant_id)
     languages = get_supported_languages(settings)
@@ -145,7 +145,7 @@ def remove_restaurant_language(
     locale: str
 ):
     """
-    Remove a language from the restaurant.
+    Remove a language from the Restaurant.
     Cannot remove if it's the only language
     """
     settings = get_or_create_settings(db, current_user.tenant_id)
@@ -187,7 +187,7 @@ def set_default_restaurant_language(
     locale: str
 ):
     """
-    Set the default restaurant language by moving it to the first position.
+    Set the default Restaurant Language by moving it to the first position.
     """
     settings = get_or_create_settings(db, current_user.tenant_id)
     languages = get_supported_languages(settings)
@@ -202,6 +202,7 @@ def set_default_restaurant_language(
     save_supported_languages(db, settings, reordered)
 
     return LanguageResponse(locale=locale, is_default=True)
+
 
 
 

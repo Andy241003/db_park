@@ -284,7 +284,7 @@ const RestaurantUsers: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Team Management</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage users and permissions for your VR restaurant
+            Manage users and permissions for your amusement park
             {currentUser && (
               <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
                 Logged in as: {currentUser.name} ({currentUser.role.toUpperCase()}) 
@@ -308,7 +308,7 @@ const RestaurantUsers: React.FC = () => {
       {/* Roles Overview */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5 mb-6">
         <RoleCard title="Owner" count={counts.owner} description="Full system access and tenant management" iconClass="fas fa-crown" iconBg="linear-gradient(135deg, #f59e0b, #d97706)" />
-        <RoleCard title="Admin" count={counts.admin} description="Full restaurant management and user control" iconClass="fas fa-user-shield" iconBg="linear-gradient(135deg, #3b82f6, #1d4ed8)" />
+        <RoleCard title="Admin" count={counts.admin} description="Full amusement park management and user control" iconClass="fas fa-user-shield" iconBg="linear-gradient(135deg, #3b82f6, #1d4ed8)" />
         <RoleCard title="Editor" count={counts.editor} description="Can create and edit content, features, and posts" iconClass="fas fa-user-edit" iconBg="linear-gradient(135deg, #10b981, #059669)" />
         <RoleCard title="Viewer" count={counts.viewer} description="Read-only access to view content and analytics" iconClass="fas fa-user" iconBg="linear-gradient(135deg, #8b5cf6, #7c3aed)" />
       </div>

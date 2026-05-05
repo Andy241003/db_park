@@ -18,14 +18,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
-    restaurantBranchesApi,
     restaurantEventsApi,
     restaurantLanguagesApi,
     restaurantSettingsApi,
-    type Branch,
+    type EventTranslation,
     type RestaurantEvent,
     type RestaurantEventCreate,
-    type EventTranslation,
 } from '../../services/restaurantApi';
 import { getApiBaseUrl } from '../../utils/api';
 
@@ -51,12 +49,14 @@ type EditableEvent = {
   branch_id?: number | null;
   location_text: string;
   registration_url: string;
+  vr360_url: string;
   max_participants: string;
   primary_image_media_id?: number;
   media_ids: number[];
   status: EventStatus;
   is_featured: boolean;
   display_order: number;
+  attributes_json?: Record<string, unknown> | null;
   translations: Record<string, EventLocalizedFields>;
 };
 
@@ -120,14 +120,6 @@ const getEventImageCountLabel = (event: RestaurantEvent) => {
   return count > 0 ? `${count} images` : 'No gallery';
 };
 
-const getBranchName = (branch: Branch) =>
-  branch.translations?.find((translation) => translation.locale === 'vi')?.name ||
-  branch.translations?.find((translation) => translation.locale === 'en')?.name ||
-  branch.name_vi ||
-  branch.name_en ||
-  branch.code ||
-  'Unknown branch';
-
 const convertToEmbedUrl = (url: string): string => {
   if (!url) return url;
   const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/;
@@ -154,7 +146,6 @@ const getStatusBadgeClass = (status: EventStatus) => {
 const RestaurantEvents: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<RestaurantEvent[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>(['vi', 'en']);
   const [currentLocale, setCurrentLocale] = useState('vi');
   const [isDisplaying, setIsDisplaying] = useState(true);
@@ -174,11 +165,10 @@ const RestaurantEvents: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [eventData, languageCodes, settings, branchData] = await Promise.all([
+      const [eventData, languageCodes, settings] = await Promise.all([
         restaurantEventsApi.getEvents(),
         restaurantLanguagesApi.getLanguages(),
         restaurantSettingsApi.getSettings(),
-        restaurantBranchesApi.getBranches(),
       ]);
 
       const locales = languageCodes.length > 0 ? languageCodes.map((item) => item.locale) : ['vi', 'en'];
@@ -187,7 +177,6 @@ const RestaurantEvents: React.FC = () => {
       setSupportedLanguages(locales);
       setCurrentLocale((previous) => (locales.includes(previous) ? previous : locales[0]));
       setEvents(eventData);
-      setBranches(branchData);
       setIsDisplaying(typeof settingsJson.events_is_displaying === 'boolean' ? settingsJson.events_is_displaying : true);
       setVr360Link(typeof settingsJson.events_vr360_link === 'string' ? settingsJson.events_vr360_link : '');
       setVrTitle(typeof settingsJson.events_vr_title === 'string' ? settingsJson.events_vr_title : '');
@@ -230,7 +219,7 @@ const RestaurantEvents: React.FC = () => {
       end_date: event?.end_date || '',
       start_time: event?.start_time || '',
       end_time: event?.end_time || '',
-      branch_id: event?.branch_id ?? undefined,
+      branch_id: undefined,
       location_text: event?.location_text || '',
       registration_url: event?.registration_url || '',
       max_participants: event?.max_participants ? String(event.max_participants) : '',
@@ -239,6 +228,8 @@ const RestaurantEvents: React.FC = () => {
       status: (event?.status as EventStatus) || 'upcoming',
       is_featured: event?.is_featured ?? false,
       display_order: event?.display_order ?? events.length,
+      attributes_json: event?.attributes_json ?? null,
+      vr360_url: event?.attributes_json?.vr360_url ? String(event.attributes_json.vr360_url) : '',
       translations: makeTranslations(event),
     }),
     [events.length, makeTranslations]
@@ -370,7 +361,7 @@ const RestaurantEvents: React.FC = () => {
       end_date: editingEvent.end_date || undefined,
       start_time: editingEvent.start_time || undefined,
       end_time: editingEvent.end_time || undefined,
-      branch_id: editingEvent.branch_id || null,
+      branch_id: null,
       location_text: editingEvent.location_text.trim() || undefined,
       registration_url: editingEvent.registration_url.trim() || undefined,
       max_participants: editingEvent.max_participants ? Number(editingEvent.max_participants) : null,
@@ -378,7 +369,12 @@ const RestaurantEvents: React.FC = () => {
       status: editingEvent.status,
       is_featured: editingEvent.is_featured,
       display_order: Number.isFinite(editingEvent.display_order) ? editingEvent.display_order : events.length,
-      attributes_json: null,
+      attributes_json: editingEvent.vr360_url?.trim()
+        ? {
+            ...(editingEvent.attributes_json ?? {}),
+            vr360_url: editingEvent.vr360_url.trim(),
+          }
+        : editingEvent.attributes_json ?? null,
       translations,
       media_ids: editingEvent.media_ids,
     };
@@ -444,12 +440,6 @@ const RestaurantEvents: React.FC = () => {
     }
   };
 
-  const getBranchLabelById = (branchId?: number | null) => {
-    if (!branchId) return 'All branches';
-    const branch = branches.find((item) => item.id === branchId);
-    return branch ? getBranchName(branch) : 'Unknown branch';
-  };
-
   return (
     <div className="space-y-6">
       <div className={SECTION_CLASS}>
@@ -486,15 +476,16 @@ const RestaurantEvents: React.FC = () => {
 
         <div className="space-y-6">
           <div>
-            <label className={LABEL_CLASS}>VR360 Link</label>
+            <label className={LABEL_CLASS}>VR360 Tour Link</label>
             <input
               type="url"
               className={FIELD_CLASS}
               value={vr360Link}
               onChange={(e) => void handleVR360Change('link', e.target.value)}
-              placeholder="https://example.com/panorama.jpg or https://youtube.com/watch?v=..."
+              placeholder="https://example.com/vr360-tour or https://youtube.com/watch?v=..."
               disabled={savingVR}
             />
+            <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this events landing experience, if available.</p>
             <p className="mt-2 flex items-start gap-2 text-sm text-slate-500">
               <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 text-slate-500" />
               <span>Enter a 360 panorama image URL or YouTube video URL for the Events landing experience.</span>
@@ -588,7 +579,6 @@ const RestaurantEvents: React.FC = () => {
                   : null;
                 const description = getEventDescription(event);
                 const title = getEventTitle(event);
-                const branchLabel = getBranchLabelById(event.branch_id);
                 const priceLabel = getEventPriceLabel(event);
                 const languageLabel = getEventLanguageLabel(event);
                 const imageCountLabel = getEventImageCountLabel(event);
@@ -623,7 +613,7 @@ const RestaurantEvents: React.FC = () => {
                         <div className="flex flex-wrap gap-6 text-sm text-slate-600">
                           <span>{event.start_date ? dayjs(event.start_date).format('YYYY-MM-DD') : 'No date'}</span>
                           <span>{event.start_time || '--:--'}{event.end_time ? ` - ${event.end_time}` : ''}</span>
-                          <span>{branchLabel}</span>
+                          <span>{event.location_text || 'No location'}</span>
                           <span>{priceLabel}</span>
                           <span>{event.max_participants ? `${event.max_participants} people` : 'Unlimited'}</span>
                         </div>
@@ -736,19 +726,6 @@ const RestaurantEvents: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className={LABEL_CLASS}>Branch</label>
-                  <select
-                    className={FIELD_CLASS}
-                    value={editingEvent.branch_id ?? ''}
-                    onChange={(e) => handleFieldChange('branch_id', e.target.value ? Number(e.target.value) : undefined)}
-                  >
-                    <option value="">All branches / not assigned</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>{getBranchName(branch)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className={LABEL_CLASS}>Start Date</label>
                   <input type="date" className={FIELD_CLASS} value={editingEvent.start_date} onChange={(e) => handleFieldChange('start_date', e.target.value)} />
                 </div>
@@ -796,6 +773,17 @@ const RestaurantEvents: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className={LABEL_CLASS}>VR360 Tour Link</label>
+                  <input
+                    type="url"
+                    className={FIELD_CLASS}
+                    value={editingEvent.vr360_url}
+                    onChange={(e) => handleFieldChange('vr360_url', e.target.value)}
+                    placeholder="https://example.com/vr360-tour or https://youtube.com/watch?v=..."
+                  />
+                  <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this event item, if available.</p>
+                </div>
+                <div>
                   <label className={LABEL_CLASS}>Status</label>
                   <select className={FIELD_CLASS} value={editingEvent.status} onChange={(e) => handleFieldChange('status', e.target.value as EventStatus)}>
                     <option value="upcoming">Upcoming</option>
@@ -837,7 +825,6 @@ const RestaurantEvents: React.FC = () => {
                       <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Event media ${mediaId}`} className="h-24 w-full object-cover" />
                       {editingEvent.primary_image_media_id === mediaId && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                        {editingEvent.primary_image_media_id !== mediaId && <button type="button" onClick={() => handleFieldChange('primary_image_media_id', mediaId)} className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Set Primary</button>}
                         <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
                       </div>
                     </div>

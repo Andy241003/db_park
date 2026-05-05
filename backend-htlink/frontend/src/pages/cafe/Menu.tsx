@@ -52,6 +52,12 @@ type MenuItemFormState = {
   calories?: number;
 };
 
+type CategoryFormState = {
+  code: string;
+  display_order: number;
+  is_active: boolean;
+};
+
 const RestaurantMenu: React.FC = () => {
   // Categories state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -60,6 +66,11 @@ const RestaurantMenu: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [categoryForm] = Form.useForm();
   const [isSavingCategory, setIsSavingCategory] = useState(false);
+  const [categoryState, setCategoryState] = useState<CategoryFormState>({
+    code: '',
+    display_order: 1,
+    is_active: true,
+  });
 
   // Menu Items state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -87,9 +98,6 @@ const RestaurantMenu: React.FC = () => {
     is_new: false,
     is_seasonal: false,
   });
-  const selectedCategoryStatus = Form.useWatch('is_active', categoryForm);
-  const selectedCategoryDisplayOrder = Form.useWatch('display_order', categoryForm);
-
   // Temporary state for category form when media picker is open
   const [tempCategoryFormData, setTempCategoryFormData] = useState<any>(null);
 
@@ -131,6 +139,11 @@ const RestaurantMenu: React.FC = () => {
     if (categoryModalVisible && tempCategoryFormData) {
       // Restore form values
       categoryForm.setFieldsValue(tempCategoryFormData.formValues);
+      setCategoryState(tempCategoryFormData.categoryState || {
+        code: '',
+        display_order: categories.length + 1,
+        is_active: true,
+      });
       setCategoryTranslations(tempCategoryFormData.translations);
       setCurrentCategoryLocale(tempCategoryFormData.locale);
       setEditingCategory(tempCategoryFormData.editingCategory);
@@ -157,6 +170,11 @@ const RestaurantMenu: React.FC = () => {
   const updateMenuItemField = <K extends keyof MenuItemFormState>(field: K, value: MenuItemFormState[K]) => {
     setMenuItemState(prev => ({ ...prev, [field]: value }));
     menuItemForm.setFieldValue(field, value);
+  };
+
+  const updateCategoryField = <K extends keyof CategoryFormState>(field: K, value: CategoryFormState[K]) => {
+    setCategoryState(prev => ({ ...prev, [field]: value }));
+    categoryForm.setFieldValue(field, value);
   };
 
   const loadLanguageSettings = async () => {
@@ -244,7 +262,13 @@ const RestaurantMenu: React.FC = () => {
     });
     setCategoryTranslations(emptyTranslations);
     setCurrentCategoryLocale(supportedLanguages[0] || 'vi');
-    categoryForm.setFieldsValue({ is_active: true, display_order: categories.length + 1 });
+    const initialState: CategoryFormState = {
+      code: '',
+      is_active: true,
+      display_order: categories.length + 1,
+    };
+    setCategoryState(initialState);
+    categoryForm.setFieldsValue(initialState);
     setCategoryModalVisible(true);
   };
 
@@ -262,11 +286,13 @@ const RestaurantMenu: React.FC = () => {
     });
     setCategoryTranslations(translationsObj);
     setCurrentCategoryLocale(supportedLanguages[0] || 'vi');
-    categoryForm.setFieldsValue({
+    const initialState: CategoryFormState = {
       code: category.code,
       display_order: category.display_order,
-      is_active: category.is_active
-    });
+      is_active: category.is_active,
+    };
+    setCategoryState(initialState);
+    categoryForm.setFieldsValue(initialState);
     setCategoryModalVisible(true);
   };
 
@@ -296,10 +322,10 @@ const RestaurantMenu: React.FC = () => {
         return;
       }
 
-      const displayOrder = values.display_order ?? categoryForm.getFieldValue('display_order') ?? (editingCategory?.display_order || categories.length + 1);
-      const isActive = values.is_active ?? categoryForm.getFieldValue('is_active') ?? (editingCategory?.is_active ?? true);
+      const displayOrder = categoryState.display_order ?? values.display_order ?? (editingCategory?.display_order || categories.length + 1);
+      const isActive = categoryState.is_active ?? values.is_active ?? (editingCategory?.is_active ?? true);
       const submitCode =
-        pickInternalCode(values.code, categoryForm.getFieldValue('code'), editingCategory?.code) ??
+        pickInternalCode(categoryState.code, values.code, editingCategory?.code) ??
         `cat_${Date.now()}`;
 
       const submitData: MenuCategoryCreate = {
@@ -541,6 +567,7 @@ const RestaurantMenu: React.FC = () => {
     const currentFormValues = categoryForm.getFieldsValue();
     setTempCategoryFormData({
       formValues: currentFormValues,
+      categoryState: { ...categoryState },
       translations: { ...categoryTranslations },
       locale: currentCategoryLocale,
       editingCategory: editingCategory
@@ -1101,8 +1128,8 @@ const RestaurantMenu: React.FC = () => {
                     <label className="block text-sm font-medium text-slate-700 mb-2">Code (Internal) *</label>
                     <Input
                       placeholder="e.g., CAT-01"
-                      defaultValue={editingCategory?.code || ''}
-                      onChange={(e) => categoryForm.setFieldValue('code', e.target.value)}
+                      value={categoryState.code}
+                      onChange={(e) => updateCategoryField('code', e.target.value)}
                       className="w-full rounded-md border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -1112,16 +1139,16 @@ const RestaurantMenu: React.FC = () => {
                     <InputNumber 
                       min={1}
                       className="w-full"
-                      value={selectedCategoryDisplayOrder}
-                      onChange={(value) => categoryForm.setFieldValue('display_order', value)}
+                      value={categoryState.display_order}
+                      onChange={(value) => updateCategoryField('display_order', value === null ? 1 : Number(value))}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
                     <Select
-                      value={(selectedCategoryStatus ?? true) ? 'active' : 'inactive'}
-                      onChange={(value) => categoryForm.setFieldValue('is_active', value === 'active')}
+                      value={categoryState.is_active ? 'active' : 'inactive'}
+                      onChange={(value) => updateCategoryField('is_active', value === 'active')}
                       className="w-full"
                     >
                       <Select.Option value="active">Active</Select.Option>
@@ -1157,11 +1184,11 @@ const RestaurantMenu: React.FC = () => {
                         <div className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-1 rounded">
                           Primary
                         </div>
-                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => setSelectedCategoryIconId(null)}
-                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                            className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
                           >
                             Remove
                           </button>
@@ -1448,16 +1475,7 @@ const RestaurantMenu: React.FC = () => {
                                 Primary
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
-                              {!isPrimary && (
-                                <button
-                                  type="button"
-                                  onClick={() => setPrimaryImageId(imageId)}
-                                  className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                                >
-                                  Set Primary
-                                </button>
-                              )}
+                            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1466,7 +1484,7 @@ const RestaurantMenu: React.FC = () => {
                                     setPrimaryImageId(selectedImageIds.filter(id => id !== imageId)[0] || null);
                                   }
                                 }}
-                                className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                                className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
                               >
                                 Remove
                               </button>

@@ -8,7 +8,7 @@ from app.schemas.core import AdminUserCreate
 # Sync engine for MySQL with pymysql
 engine = create_engine(
     str(settings.SQLALCHEMY_DATABASE_URI),
-    echo=True,
+    echo=False,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
     pool_timeout=settings.DATABASE_POOL_TIMEOUT,

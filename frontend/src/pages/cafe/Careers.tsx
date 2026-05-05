@@ -439,7 +439,7 @@ const CafeCareers: React.FC = () => {
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
           <h2 className="text-xl font-bold text-slate-800">Display Status - Careers Section</h2>
           <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${isDisplaying ? 'text-emerald-600' : 'text-slate-500'}`}>
+            <span className={`text-sm font-medium ${isDisplaying ? 'text-green-600' : 'text-slate-500'}`}>
               {isDisplaying ? 'Displaying' : 'Hidden'}
             </span>
             <label className="relative inline-flex cursor-pointer items-center">
@@ -450,7 +450,7 @@ const CafeCareers: React.FC = () => {
                 onChange={(e) => void handleDisplayStatusChange(e.target.checked)}
                 disabled={savingDisplayStatus}
               />
-              <div className="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+              <div className="h-6 w-11 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white disabled:opacity-50 disabled:cursor-not-allowed" />
             </label>
           </div>
         </div>

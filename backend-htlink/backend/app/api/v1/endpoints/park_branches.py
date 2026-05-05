@@ -1,7 +1,7 @@
 """
 Restaurant Branches API endpoints.
 
-Handles restaurant branch management with multi-language support
+Handles Restaurant Branch management with multi-language support
 """
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,6 +19,7 @@ from app.models.restaurant import (
     CafeBranchMedia
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -313,7 +314,7 @@ def create_branch(
     # Add translations
     for trans in branch_data.translations:
             translation = CafeBranchTranslation(
-                branch_id=new_branch.id,
+                location_id=new_branch.id,
                 locale=trans.locale,
                 name=trans.name,
                 address=trans.address,
@@ -326,7 +327,7 @@ def create_branch(
     if branch_data.media_ids:
         for idx, media_id in enumerate(branch_data.media_ids):
             branch_media = CafeBranchMedia(
-                branch_id=new_branch.id,
+                location_id=new_branch.id,
                 media_id=media_id,
                 sort_order=idx
             )
@@ -391,12 +392,12 @@ def update_branch(
         # Delete existing translations
         db.exec(
             select(CafeBranchTranslation).where(
-                CafeBranchTranslation.branch_id == branch_id
+                CafeBranchTranslation.location_id == branch_id
             )
         ).all()
         
         for existing_trans in db.exec(
-            select(CafeBranchTranslation).where(CafeBranchTranslation.branch_id == branch_id)
+            select(CafeBranchTranslation).where(CafeBranchTranslation.location_id == branch_id)
         ).all():
             db.delete(existing_trans)
         db.flush()
@@ -404,7 +405,7 @@ def update_branch(
         # Add new translations
         for trans in branch_data.translations:
             translation = CafeBranchTranslation(
-                branch_id=branch_id,
+                location_id=branch_id,
                 locale=trans.locale,
                 name=trans.name,
                 address=trans.address,
@@ -417,7 +418,7 @@ def update_branch(
     if branch_data.media_ids is not None:
         # Delete existing media
         for existing_media in db.exec(
-            select(CafeBranchMedia).where(CafeBranchMedia.branch_id == branch_id)
+            select(CafeBranchMedia).where(CafeBranchMedia.location_id == branch_id)
         ).all():
             db.delete(existing_media)
         db.flush()
@@ -425,7 +426,7 @@ def update_branch(
         # Add new media
         for idx, media_id in enumerate(branch_data.media_ids):
             branch_media = CafeBranchMedia(
-                branch_id=branch_id,
+                location_id=branch_id,
                 media_id=media_id,
                 sort_order=idx
             )
@@ -465,6 +466,10 @@ def delete_branch(
         raise HTTPException(status_code=404, detail="Branch not found")
     
     branch_name = branch.name or branch.code
+    delete_related_rows(db, CafeBranchTranslation, CafeBranchTranslation.location_id == branch_id)
+    delete_related_rows(db, CafeBranchMedia, CafeBranchMedia.location_id == branch_id)
+
+    db.flush()
     db.delete(branch)
     db.commit()
 
@@ -501,6 +506,7 @@ def reorder_branch(
     db.commit()
     
     return {"success": True, "message": "Branch reordered"}
+
 
 
 

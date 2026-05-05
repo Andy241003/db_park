@@ -1,36 +1,36 @@
 
 import {
-  faCalendarAlt,
-  faCircleInfo,
-  faEye,
-  faImage,
-  faImages,
-  faInfoCircle,
-  faMoneyBillWave,
-  faPenToSquare,
-  faPercent,
-  faPlus,
-  faTag,
-  faTimes,
-  faTrashCan,
-  faVrCardboard,
+    faCalendarAlt,
+    faCircleInfo,
+    faEye,
+    faImage,
+    faImages,
+    faInfoCircle,
+    faMoneyBillWave,
+    faPenToSquare,
+    faPercent,
+    faPlus,
+    faTag,
+    faTimes,
+    faTrashCan,
+    faVrCardboard,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
-import { getApiBaseUrl } from '../../utils/api';
 import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
-  cafeBranchesApi,
-  cafeLanguagesApi,
-  cafePromotionsApi,
-  cafeSettingsApi,
-  type Branch,
-  type Promotion,
-  type PromotionCreate,
-  type PromotionTranslation,
+    cafeBranchesApi,
+    cafeLanguagesApi,
+    cafePromotionsApi,
+    cafeSettingsApi,
+    type Branch,
+    type Promotion,
+    type PromotionCreate,
+    type PromotionTranslation,
 } from '../../services/cafeApi';
+import { getApiBaseUrl } from '../../utils/api';
 
 const LABEL_CLASS = 'mb-2 block text-sm font-medium text-slate-700';
 const FIELD_CLASS = 'w-full rounded-md border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500';
@@ -450,12 +450,12 @@ const CafePromotions: React.FC = () => {
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
           <h2 className="text-xl font-bold text-slate-800">Display Status - Promotions Section</h2>
           <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${isDisplaying ? 'text-emerald-600' : 'text-slate-500'}`}>
+            <span className={`text-sm font-medium ${isDisplaying ? 'text-green-600' : 'text-slate-500'}`}>
               {isDisplaying ? 'Displaying' : 'Hidden'}
             </span>
             <label className="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" className="peer sr-only" checked={isDisplaying} onChange={(e) => void handleDisplayStatusChange(e.target.checked)} disabled={savingDisplayStatus} />
-              <div className="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+              <div className="h-6 w-11 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white disabled:opacity-50 disabled:cursor-not-allowed" />
             </label>
           </div>
         </div>

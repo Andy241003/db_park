@@ -6,8 +6,8 @@ import { isAuthenticated } from '../../services/api';
 
 const RestaurantLayout: React.FC = () => {
   const location = useLocation();
-  const baseSegment = '/restaurant';
-  const sectionLabel = 'Restaurant';
+  const baseSegment = '/park';
+  const sectionLabel = 'Adventure Park';
 
   // Check authentication
   if (!isAuthenticated()) {
@@ -21,38 +21,61 @@ const RestaurantLayout: React.FC = () => {
       case '':
       case '/':
         return { title: 'Dashboard', breadcrumb: `${sectionLabel} / Dashboard` };
-      case '/users':
-        return { title: 'User Management', breadcrumb: `${sectionLabel} / User Management` };
+      case '/info':
       case '/home':
         return { title: 'Home', breadcrumb: `${sectionLabel} / Home` };
+      case '/introduction':
+        return { title: 'Introduction', breadcrumb: `${sectionLabel} / Introduction` };
+      case '/map-tour':
+        return { title: 'Map & Tour', breadcrumb: `${sectionLabel} / Map & Tour` };
+      case '/attractions':
+        return { title: 'Points of Interest', breadcrumb: `${sectionLabel} / Points of Interest` };
+      case '/games-activities':
+        return { title: 'Games & Activities', breadcrumb: `${sectionLabel} / Games & Activities` };
+      case '/ticket-types':
+        return { title: 'Ticket Types & Pricing', breadcrumb: `${sectionLabel} / Ticket Types & Pricing` };
+      case '/schedule-events':
+        return { title: 'Schedule & Events', breadcrumb: `${sectionLabel} / Schedule & Events` };
+      case '/dining-services':
+        return { title: 'Dining', breadcrumb: `${sectionLabel} / Dining` };
+      case '/services-support':
+        return { title: 'Services & Support', breadcrumb: `${sectionLabel} / Services & Support` };
+      case '/visit-info':
+        return { title: 'Visitor Information', breadcrumb: `${sectionLabel} / Visitor Information` };
+      case '/offers':
+        return { title: 'Offers', breadcrumb: `${sectionLabel} / Offers` };
+      case '/library':
+        return { title: 'Library', breadcrumb: `${sectionLabel} / Library` };
+      case '/users':
+        return { title: 'Users', breadcrumb: `${sectionLabel} / Users` };
       case '/about':
-        return { title: 'About', breadcrumb: `${sectionLabel} / About` };
+        return { title: 'Introduction', breadcrumb: `${sectionLabel} / Introduction` };
       case '/menu':
-        return { title: 'Menu Management', breadcrumb: `${sectionLabel} / Menu` };
-       case '/space':
-        return { title: 'Space', breadcrumb: `${sectionLabel} / Space` };
-      case '/branches':
-        return { title: 'Branches', breadcrumb: `${sectionLabel} / Branches` };
+        return { title: 'Dining', breadcrumb: `${sectionLabel} / Dining` };
       case '/events':
-        return { title: 'Events', breadcrumb: `${sectionLabel} / Events` };
+        return { title: 'Schedule & Events', breadcrumb: `${sectionLabel} / Schedule & Events` };
       case '/careers':
         return { title: 'Careers', breadcrumb: `${sectionLabel} / Careers` };
       case '/promotions':
-        return { title: 'Promotions', breadcrumb: `${sectionLabel} / Promotions` };
+        return { title: 'Offers', breadcrumb: `${sectionLabel} / Offers` };
+      case '/services':
+        return { title: 'Services & Support', breadcrumb: `${sectionLabel} / Services & Support` };
+      case '/achievements':
+        return { title: 'Achievements', breadcrumb: `${sectionLabel} / Achievements` };
       case '/gallery':
-        return { title: 'Media Library', breadcrumb: `${sectionLabel} / Media Library` };
+        return { title: 'Library', breadcrumb: `${sectionLabel} / Library` };
       case '/contact':
         return { title: 'Contact', breadcrumb: `${sectionLabel} / Contact` };
       case '/languages':
         return { title: 'Languages', breadcrumb: `${sectionLabel} / Languages` };
       case '/tenants':
-        return { title: 'Tenant Settings', breadcrumb: `${sectionLabel} / Tenant Settings` };
+        return { title: 'Tenants', breadcrumb: `${sectionLabel} / Tenants` };
       case '/settings':
         return { title: 'Settings', breadcrumb: `${sectionLabel} / Settings` };
       case '/activities':
         return { title: 'Activity Log', breadcrumb: `${sectionLabel} / Activity Log` };
       default:
-        return { title: 'VR Restaurant', breadcrumb: sectionLabel };
+        return { title: 'Adventure Park', breadcrumb: sectionLabel };
     }
   };
 

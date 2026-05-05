@@ -49,7 +49,7 @@ class AdminUserCreate(SQLModel):
     email: str
     password: str
     full_name: str
-    role: UserRole = UserRole.EDITOR
+    role: UserRole = UserRole.ADMIN
     tenant_id: int
 
 

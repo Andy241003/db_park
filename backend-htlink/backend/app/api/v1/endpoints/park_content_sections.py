@@ -4,20 +4,18 @@ Restaurant Content Sections API endpoints.
 Handles content sections for Home/About pages with multi-language support
 """
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlmodel import Session, select
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 
-from app.core.db import get_db
 from app.api.deps import CurrentUser, SessionDep
-from app.models.activity_log import ActivityType
 from app.models.restaurant import (
     CafeContentSection,
     CafeContentSectionTranslation
 )
-from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -98,6 +96,35 @@ def get_section_with_relations(section_id: int, db: Session) -> dict:
             ) for t in section.translations
         ]
     }
+
+
+def build_section_response(
+    section: CafeContentSection | dict,
+    translations: List[ContentSectionTranslationSchema],
+) -> CafeContentSectionResponse:
+    payload = section if isinstance(section, dict) else {
+        "id": section.id,
+        "tenant_id": section.tenant_id,
+        "section_type": section.section_type,
+        "page_code": section.page_code,
+        "icon": section.icon,
+        "image_media_id": section.image_media_id,
+        "is_active": section.is_active,
+        "display_order": section.display_order,
+        "attributes_json": section.attributes_json,
+    }
+    return CafeContentSectionResponse(
+        id=payload["id"],
+        tenant_id=payload["tenant_id"],
+        section_type=payload["section_type"],
+        page_code=payload["page_code"],
+        icon=payload["icon"],
+        image_media_id=payload["image_media_id"],
+        is_active=payload["is_active"],
+        display_order=payload["display_order"],
+        attributes_json=payload["attributes_json"],
+        translations=translations,
+    )
 
 
 # ==========================================
@@ -185,8 +212,7 @@ def create_content_section(
     )
     
     db.add(new_section)
-    db.commit()
-    db.refresh(new_section)
+    db.flush()
     
     # Add translations
     for trans in section_data.translations:
@@ -198,22 +224,30 @@ def create_content_section(
             content=trans.content
         )
         db.add(translation)
-    
-    db.commit()
-    
-    section_title = next((trans.title for trans in section_data.translations if trans.title), new_section.section_type)
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.CREATE_POST,
-        f'Content section "{section_title}" created',
-        resource_type="restaurant_content_section",
-        resource_id=new_section.id,
-        extra_details={"title": section_title, "page_code": new_section.page_code},
-    )
 
-    section_full = get_section_with_relations(new_section.id, db)
-    return CafeContentSectionResponse(**section_full)
+    response_payload = {
+        "id": new_section.id,
+        "tenant_id": new_section.tenant_id,
+        "section_type": new_section.section_type,
+        "page_code": new_section.page_code,
+        "icon": new_section.icon,
+        "image_media_id": new_section.image_media_id,
+        "is_active": new_section.is_active,
+        "display_order": new_section.display_order,
+        "attributes_json": new_section.attributes_json,
+    }
+    db.commit()
+
+    response_translations = [
+        ContentSectionTranslationSchema(
+            locale=trans.locale,
+            title=trans.title,
+            description=trans.description,
+            content=trans.content,
+        )
+        for trans in section_data.translations
+    ]
+    return build_section_response(response_payload, response_translations)
 
 
 @router.put("/{section_id}", response_model=CafeContentSectionResponse)
@@ -241,46 +275,79 @@ def update_content_section(
     db.add(section)
     
     if section_data.translations is not None:
-        # Delete all existing translations for this section
-        delete_stmt = select(CafeContentSectionTranslation).where(
-            CafeContentSectionTranslation.section_id == section_id
-        )
-        existing_translations = db.exec(delete_stmt).all()
-        for trans in existing_translations:
-            db.delete(trans)
-        
-        # Commit the deletes to avoid unique constraint conflicts
-        db.commit()
-        
-        # Insert all translations fresh
-        for trans_data in section_data.translations:
-            translation = CafeContentSectionTranslation(
-                section_id=section_id,
-                locale=trans_data.locale,
-                title=trans_data.title,
-                description=trans_data.description,
-                content=trans_data.content
+        existing_translations = db.exec(
+            select(CafeContentSectionTranslation).where(
+                CafeContentSectionTranslation.section_id == section_id
             )
-            db.add(translation)
-    
-    db.commit()
-    
-    section_title = next(
-        (trans.title for trans in (section_data.translations or []) if trans.title),
-        section.section_type,
-    )
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.UPDATE_POST,
-        f'Content section "{section_title}" updated',
-        resource_type="restaurant_content_section",
-        resource_id=section_id,
-        extra_details={"title": section_title, "page_code": section.page_code},
-    )
+        ).all()
 
-    section_full = get_section_with_relations(section_id, db)
-    return CafeContentSectionResponse(**section_full)
+        existing_by_locale = {translation.locale: translation for translation in existing_translations}
+        incoming_locales = {translation.locale for translation in section_data.translations}
+
+        # Remove only translations that are no longer present.
+        for translation in existing_translations:
+            if translation.locale not in incoming_locales:
+                db.delete(translation)
+
+        # Update existing translations in place and add missing locales.
+        for trans_data in section_data.translations:
+            translation = existing_by_locale.get(trans_data.locale)
+            if translation:
+                translation.title = trans_data.title
+                translation.description = trans_data.description
+                translation.content = trans_data.content
+                db.add(translation)
+                continue
+
+            db.add(
+                CafeContentSectionTranslation(
+                    section_id=section_id,
+                    locale=trans_data.locale,
+                    title=trans_data.title,
+                    description=trans_data.description,
+                    content=trans_data.content,
+                )
+            )
+    
+    response_payload = {
+        "id": section.id,
+        "tenant_id": section.tenant_id,
+        "section_type": section.section_type,
+        "page_code": section.page_code,
+        "icon": section.icon,
+        "image_media_id": section.image_media_id,
+        "is_active": section.is_active,
+        "display_order": section.display_order,
+        "attributes_json": section.attributes_json,
+    }
+    db.commit()
+
+    response_translations = (
+        [
+            ContentSectionTranslationSchema(
+                locale=trans.locale,
+                title=trans.title,
+                description=trans.description,
+                content=trans.content,
+            )
+            for trans in section_data.translations
+        ]
+        if section_data.translations is not None
+        else [
+            ContentSectionTranslationSchema(
+                locale=translation.locale,
+                title=translation.title,
+                description=translation.description,
+                content=translation.content,
+            )
+            for translation in db.exec(
+                select(CafeContentSectionTranslation).where(
+                    CafeContentSectionTranslation.section_id == section_id
+                )
+            ).all()
+        ]
+    )
+    return build_section_response(response_payload, response_translations)
 
 
 @router.delete("/{section_id}")
@@ -294,20 +361,11 @@ def delete_content_section(
     
     if not section or section.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Content section not found")
-    
-    section_title = section.section_type
+
+    delete_related_rows(db, CafeContentSectionTranslation, CafeContentSectionTranslation.section_id == section_id)
+    db.flush()
     db.delete(section)
     db.commit()
-
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_POST,
-        f'Content section "{section_title}" deleted',
-        resource_type="restaurant_content_section",
-        resource_id=section_id,
-        extra_details={"title": section_title, "page_code": section.page_code},
-    )
     
     return {"success": True, "message": "Content section deleted"}
 
@@ -327,6 +385,7 @@ def reorder_content_sections(
     
     db.commit()
     return {"success": True, "message": "Content sections reordered"}
+
 
 
 

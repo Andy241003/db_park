@@ -202,7 +202,7 @@ const RestaurantTenants: React.FC = () => {
               Refresh
             </button>
             <Link
-              to="/restaurant/settings"
+              to="/park/settings"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-700 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
             >
               <FontAwesomeIcon icon={faGlobe} />
@@ -351,7 +351,7 @@ const RestaurantTenants: React.FC = () => {
 
         <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
           <Link
-            to="/restaurant/settings"
+            to="/park/settings"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-6 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
             Back to Settings

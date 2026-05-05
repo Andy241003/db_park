@@ -10,7 +10,7 @@ from app.api.v1.endpoints import (
     activity_logs,
     activity_test,
 )
-from app.api.v1.restaurant import restaurant_router
+from app.api.v1.park import park_router
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -21,4 +21,4 @@ api_router.include_router(users.router, prefix="/users", tags=["users"], include
 api_router.include_router(locales.router, prefix="/locales", tags=["locales"], include_in_schema=False)
 api_router.include_router(activity_logs.router, prefix="/activity-logs", tags=["activity-logs"], include_in_schema=False)
 api_router.include_router(activity_test.router, prefix="/activity-test", tags=["activity-test"], include_in_schema=False)
-api_router.include_router(restaurant_router)
+api_router.include_router(park_router)

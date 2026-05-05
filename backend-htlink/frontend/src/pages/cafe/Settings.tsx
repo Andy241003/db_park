@@ -463,7 +463,7 @@ const RestaurantSettingsPage: React.FC = () => {
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-slate-500 mt-1">
-              {settings.metaDescription.length}/160 characters - Short description about the restaurant
+              {settings.metaDescription.length}/160 characters - Short description about the amusement park
             </p>
           </div>
 
@@ -521,7 +521,7 @@ const RestaurantSettingsPage: React.FC = () => {
                   Recommended: 1200x630px (Facebook, Twitter, LinkedIn)
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  This image will be displayed when sharing your restaurant website on social media platforms
+                  This image will be displayed when sharing your amusement park website on social media platforms
                 </p>
               </div>
             </div>

@@ -1,20 +1,20 @@
-import { Coffee, MapPin, Menu, Tag } from 'lucide-react';
+import { LifeBuoy, MapPin, Sparkles, Tag } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   restaurantActivityLogsApi,
-  restaurantBranchesApi,
-  restaurantMenuApi,
+  restaurantAttractionsApi,
   restaurantPromotionsApi,
+  restaurantServicesApi,
   type RestaurantActivityItem,
 } from '../../services/restaurantApi';
 import { tenantApi, type TenantSettings } from '../../services/tenantApi';
 
 interface RestaurantDashboardStats {
-  totalMenuCategories: number;
-  totalMenuItems: number;
+  totalServices: number;
+  totalRecentActivities: number;
   totalPromotions: number;
-  totalBranches: number;
+  totalPointsOfInterest: number;
 }
 
 interface TenantDisplayInfo {
@@ -26,12 +26,12 @@ interface TenantDisplayInfo {
 const RestaurantDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const basePath = '/restaurant';
+  const basePath = '/park';
   const [stats, setStats] = useState<RestaurantDashboardStats>({
-    totalMenuCategories: 0,
-    totalMenuItems: 0,
+    totalServices: 0,
+    totalRecentActivities: 0,
     totalPromotions: 0,
-    totalBranches: 0,
+    totalPointsOfInterest: 0,
   });
   const [recentActivities, setRecentActivities] = useState<RestaurantActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,21 +69,21 @@ const RestaurantDashboard: React.FC = () => {
       setIsLoading(true);
       await loadTenantInfo();
 
-      const [categories, items, promotions, branches] = await Promise.all([
-        restaurantMenuApi.getCategories().catch(() => []),
-        restaurantMenuApi.getItems().catch(() => []),
+      const [services, promotions, attractions] = await Promise.all([
+        restaurantServicesApi.getServices().catch(() => []),
         restaurantPromotionsApi.getPromotions().catch(() => []),
-        restaurantBranchesApi.getBranches().catch(() => []),
+        restaurantAttractionsApi.getAttractions().catch(() => []),
       ]);
 
+      const activities = await restaurantActivityLogsApi.getRecentActivities(10);
+
       setStats({
-        totalMenuCategories: categories?.length || 0,
-        totalMenuItems: items?.length || 0,
+        totalServices: services?.length || 0,
+        totalRecentActivities: activities?.length || 0,
         totalPromotions: promotions?.length || 0,
-        totalBranches: branches?.length || 0,
+        totalPointsOfInterest: attractions?.length || 0,
       });
 
-      const activities = await restaurantActivityLogsApi.getRecentActivities(10);
       setRecentActivities(activities);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -107,7 +107,7 @@ const RestaurantDashboard: React.FC = () => {
           <div>
             <h2 className="mb-2 text-3xl font-bold">Welcome back!</h2>
             <p className="text-lg text-blue-100">
-              Manage your VR restaurant content and keep every dining experience up to date
+              Manage your amusement park content and keep every visitor experience up to date
             </p>
           </div>
 
@@ -125,16 +125,16 @@ const RestaurantDashboard: React.FC = () => {
 
         <div className="mt-6 flex flex-wrap gap-3">
           <button
-            onClick={() => navigate(`${basePath}/menu`)}
+            onClick={() => navigate(`${basePath}/services-support`)}
             className="rounded-md bg-white px-6 py-2.5 font-medium text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
           >
-            Add Menu Category
+            Add Service
           </button>
           <button
-            onClick={() => navigate(`${basePath}/menu`)}
+            onClick={() => navigate(`${basePath}/attractions`)}
             className="rounded-md bg-white px-6 py-2.5 font-medium text-blue-600 shadow-sm transition-colors hover:bg-blue-50"
           >
-            Add Menu Item
+            Add Point of Interest
           </button>
           <button
             onClick={() => navigate(`${basePath}/promotions`)}
@@ -149,15 +149,15 @@ const RestaurantDashboard: React.FC = () => {
         <div className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-1 text-sm font-medium text-slate-600">Menu Categories</p>
-              <p className="text-3xl font-bold text-slate-900">{stats.totalMenuCategories}</p>
+              <p className="mb-1 text-sm font-medium text-slate-600">Services</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.totalServices}</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
-              <Coffee className="h-7 w-7 text-white" />
+              <LifeBuoy className="h-7 w-7 text-white" />
             </div>
           </div>
           <button
-            onClick={() => navigate(`${basePath}/menu`)}
+            onClick={() => navigate(`${basePath}/services-support`)}
             className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
           >
             View all -&gt;
@@ -167,15 +167,15 @@ const RestaurantDashboard: React.FC = () => {
         <div className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-1 text-sm font-medium text-slate-600">Menu Items</p>
-              <p className="text-3xl font-bold text-slate-900">{stats.totalMenuItems}</p>
+              <p className="mb-1 text-sm font-medium text-slate-600">Recent Activities</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.totalRecentActivities}</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 via-pink-600 to-red-600">
-              <Menu className="h-7 w-7 text-white" />
+              <Sparkles className="h-7 w-7 text-white" />
             </div>
           </div>
           <button
-            onClick={() => navigate(`${basePath}/menu`)}
+            onClick={() => navigate(`${basePath}/activities`)}
             className="mt-4 text-sm font-medium text-pink-600 hover:text-pink-700"
           >
             View all -&gt;
@@ -203,15 +203,15 @@ const RestaurantDashboard: React.FC = () => {
         <div className="rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="mb-1 text-sm font-medium text-slate-600">Branches</p>
-              <p className="text-3xl font-bold text-slate-900">{stats.totalBranches}</p>
+              <p className="mb-1 text-sm font-medium text-slate-600">Points of Interest</p>
+              <p className="text-3xl font-bold text-slate-900">{stats.totalPointsOfInterest}</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
               <MapPin className="h-7 w-7 text-white" />
             </div>
           </div>
           <button
-            onClick={() => navigate(`${basePath}/branches`)}
+            onClick={() => navigate(`${basePath}/attractions`)}
             className="mt-4 text-sm font-medium text-emerald-600 hover:text-emerald-700"
           >
             View all -&gt;

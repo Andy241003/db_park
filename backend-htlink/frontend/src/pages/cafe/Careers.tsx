@@ -18,11 +18,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
-    cafeBranchesApi,
     cafeCareersApi,
     cafeLanguagesApi,
     cafeSettingsApi,
-    type Branch,
     type Career,
     type CareerCreate,
     type CareerTranslation,
@@ -118,14 +116,6 @@ const getCareerLanguageLabel = (career: Career) => {
   return count > 0 ? `${count} languages` : 'No translations';
 };
 
-const getBranchName = (branch: Branch) =>
-  branch.translations?.find((translation) => translation.locale === 'vi')?.name ||
-  branch.translations?.find((translation) => translation.locale === 'en')?.name ||
-  branch.name_vi ||
-  branch.name_en ||
-  branch.code ||
-  'Unknown branch';
-
 const getStatusBadgeClass = (status: CareerStatus) => {
   switch (status) {
     case 'closed':
@@ -150,7 +140,6 @@ const convertToEmbedUrl = (url: string): string => {
 const RestaurantCareers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [careers, setCareers] = useState<Career[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>(['vi', 'en']);
   const [currentLocale, setCurrentLocale] = useState('vi');
   const [isDisplaying, setIsDisplaying] = useState(true);
@@ -169,18 +158,16 @@ const RestaurantCareers: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [careerData, languages, settings, branchData] = await Promise.all([
+      const [careerData, languages, settings] = await Promise.all([
         cafeCareersApi.getCareers(),
         cafeLanguagesApi.getLanguages(),
         cafeSettingsApi.getSettings(),
-        cafeBranchesApi.getBranches(),
       ]);
 
       const locales = languages.length > 0 ? languages.map((item) => item.locale) : ['vi', 'en'];
       setSupportedLanguages(locales);
       setCurrentLocale((previous) => (locales.includes(previous) ? previous : locales[0]));
       setCareers(careerData);
-      setBranches(branchData);
       setIsDisplaying(settings.settings_json?.careers_is_displaying ?? true);
       setVr360Link(settings.settings_json?.careers_vr360_link || '');
       setVrTitle(settings.settings_json?.careers_vr_title || '');
@@ -228,7 +215,7 @@ const RestaurantCareers: React.FC = () => {
     application_url: career?.application_url || '',
     primary_image_media_id: career?.primary_image_media_id ?? undefined,
     media_ids: career?.media_ids || [],
-    branch_id: career?.branch_id ?? undefined,
+    branch_id: undefined,
     status: (career?.status as CareerStatus) || 'open',
     display_order: career?.display_order ?? careers.length,
     is_urgent: career?.is_urgent ?? false,
@@ -325,7 +312,7 @@ const RestaurantCareers: React.FC = () => {
       contact_phone: editingCareer.contact_phone.trim(),
       application_url: editingCareer.application_url.trim(),
       primary_image_media_id: editingCareer.primary_image_media_id || null,
-      branch_id: editingCareer.branch_id || null,
+      branch_id: null,
       status: editingCareer.status,
       display_order: Number.isFinite(editingCareer.display_order) ? editingCareer.display_order : careers.length,
       is_urgent: editingCareer.is_urgent,
@@ -428,12 +415,6 @@ const RestaurantCareers: React.FC = () => {
     }
   };
 
-  const getBranchLabelById = (branchId?: number | null) => {
-    if (!branchId) return 'All branches';
-    const branch = branches.find((item) => item.id === branchId);
-    return branch ? getBranchName(branch) : 'Unknown branch';
-  };
-
   return (
     <div className="space-y-6">
       <div className={SECTION_CLASS}>
@@ -522,7 +503,7 @@ const RestaurantCareers: React.FC = () => {
         <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800">Careers Management</h2>
-            <p className="mt-1 text-sm text-slate-500">Manage job postings, branches, deadlines, and featured hiring priorities for the restaurant site.</p>
+            <p className="mt-1 text-sm text-slate-500">Manage job postings, deadlines, and featured hiring priorities for the amusement park site.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <select
@@ -555,7 +536,6 @@ const RestaurantCareers: React.FC = () => {
             {filteredCareers.map((career) => {
               const title = getCareerTitle(career);
               const description = getCareerDescription(career);
-              const branchLabel = getBranchLabelById(career.branch_id);
               const salaryLabel = getCareerSalaryLabel(career);
               const languageLabel = getCareerLanguageLabel(career);
               const imageId = career.primary_image_media_id ?? career.media_ids?.[0];
@@ -590,7 +570,6 @@ const RestaurantCareers: React.FC = () => {
 
                       <div className="flex flex-wrap gap-6 text-sm text-slate-600">
                         <span>{career.job_type || 'No type'}</span>
-                        <span>{branchLabel}</span>
                         <span>{salaryLabel}</span>
                         <span>{career.deadline ? dayjs(career.deadline).format('YYYY-MM-DD') : 'No deadline'}</span>
                         <span>{career.contact_phone || career.contact_email || 'No contact info'}</span>
@@ -715,19 +694,6 @@ const RestaurantCareers: React.FC = () => {
                   <input type="text" className={FIELD_CLASS} value={editingCareer.code} onChange={(e) => handleFieldChange('code', e.target.value)} placeholder="career_code" />
                 </div>
                 <div>
-                  <label className={LABEL_CLASS}>Branch</label>
-                  <select
-                    className={FIELD_CLASS}
-                    value={editingCareer.branch_id ?? ''}
-                    onChange={(e) => handleFieldChange('branch_id', e.target.value ? Number(e.target.value) : undefined)}
-                  >
-                    <option value="">All branches / not assigned</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>{getBranchName(branch)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className={LABEL_CLASS}>Job Type</label>
                   <input type="text" className={FIELD_CLASS} value={editingCareer.job_type} onChange={(e) => handleFieldChange('job_type', e.target.value)} placeholder="Full-time, Part-time, Internship..." />
                 </div>
@@ -801,7 +767,6 @@ const RestaurantCareers: React.FC = () => {
                           <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Career media ${mediaId}`} className="h-24 w-full object-cover" />
                           {isPrimary && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                            {!isPrimary && <button type="button" onClick={() => handleSetPrimaryMedia(mediaId)} className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Set Primary</button>}
                             <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
                           </div>
                         </div>

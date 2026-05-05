@@ -66,7 +66,7 @@ const RestaurantActivities: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Restaurant Activity Log</h1>
         <p className="mt-2 text-slate-600">
-          Track logins and content management activity across the restaurant dashboard
+          Track logins and content management activity across the amusement park dashboard
         </p>
       </div>
 

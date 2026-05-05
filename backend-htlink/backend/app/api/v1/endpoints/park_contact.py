@@ -1,7 +1,7 @@
 """
 Restaurant Contact API endpoints.
 
-Handles restaurant contact information separately from general settings
+Handles Restaurant Contact information separately from general settings
 """
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
@@ -67,8 +67,8 @@ def get_restaurant_contact(
     db: SessionDep
 ):
     """
-    Get restaurant contact information for current tenant
-    Contact data is stored in the restaurant settings table but accessed separately.
+    Get Restaurant Contact information for current tenant
+    Contact data is stored in the Restaurant settings table but accessed separately.
     """
     settings = get_restaurant_settings_record(db, current_user.tenant_id)
     
@@ -117,8 +117,8 @@ def update_restaurant_contact(
     db: SessionDep
 ):
     """
-    Update restaurant contact information
-    Contact data is stored in the restaurant settings table.
+    Update Restaurant Contact information
+    Contact data is stored in the Restaurant settings table.
     """
     # Get or create settings
     settings = get_restaurant_settings_record(db, current_user.tenant_id)
@@ -127,7 +127,7 @@ def update_restaurant_contact(
         # Create new settings if doesn't exist
         settings = CafeSettings(
             tenant_id=current_user.tenant_id,
-            restaurant_name="My Restaurant",
+            park_name="My Restaurant",
             primary_color="#6f4e37",
             settings_json={}
         )
@@ -139,7 +139,7 @@ def update_restaurant_contact(
     # Update contact fields from request
     update_dict = contact_data.model_dump(exclude_unset=True)
     
-    # Update direct fields in the restaurant settings table
+    # Update direct fields in the Restaurant settings table
     if 'phone' in update_dict:
         settings.phone = update_dict['phone']
     if 'email' in update_dict:
@@ -184,6 +184,7 @@ def update_restaurant_contact(
     
     # Return updated contact data
     return get_restaurant_contact(current_user, db)
+
 
 
 

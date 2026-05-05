@@ -1,7 +1,7 @@
 """
 Restaurant Menu API endpoints.
 
-Handles restaurant menu categories and menu items with multi-language support
+Handles Restaurant Menu categories and menu items with multi-language support
 """
 from typing import Any, Optional, List
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,6 +22,7 @@ from app.models.restaurant import (
     MenuItemStatus
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -408,14 +409,7 @@ def delete_category(
         )
 
     category_name = category.code
-    translations = db.exec(
-        select(CafeMenuCategoryTranslation).where(
-            CafeMenuCategoryTranslation.category_id == category_id
-        )
-    ).all()
-
-    for translation in translations:
-        db.delete(translation)
+    delete_related_rows(db, CafeMenuCategoryTranslation, CafeMenuCategoryTranslation.category_id == category_id)
 
     db.flush()
     db.delete(category)
@@ -708,6 +702,10 @@ def delete_menu_item(
         raise HTTPException(status_code=404, detail="Menu item not found")
     
     item_name = item.code
+    delete_related_rows(db, CafeMenuItemTranslation, CafeMenuItemTranslation.item_id == item_id)
+    delete_related_rows(db, CafeMenuItemMedia, CafeMenuItemMedia.item_id == item_id)
+
+    db.flush()
     db.delete(item)
     db.commit()
 
@@ -722,6 +720,7 @@ def delete_menu_item(
     )
     
     return {"success": True, "message": "Menu item deleted"}
+
 
 
 

@@ -1,17 +1,17 @@
 import {
-  faAward,
-  faCircleInfo,
-  faEye,
-  faGlobe,
-  faImage,
-  faImages,
-  faInfoCircle,
-  faPenToSquare,
-  faPlus,
-  faStar,
-  faTimes,
-  faTrashCan,
-  faVrCardboard,
+    faAward,
+    faCircleInfo,
+    faEye,
+    faGlobe,
+    faImage,
+    faImages,
+    faInfoCircle,
+    faPenToSquare,
+    faPlus,
+    faStar,
+    faTimes,
+    faTrashCan,
+    faVrCardboard,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import dayjs from 'dayjs';
@@ -19,12 +19,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
-  cafeAchievementsApi,
-  cafeLanguagesApi,
-  cafeSettingsApi,
-  type Achievement,
-  type AchievementCreate,
-  type AchievementTranslation,
+    cafeAchievementsApi,
+    cafeLanguagesApi,
+    cafeSettingsApi,
+    type Achievement,
+    type AchievementCreate,
+    type AchievementTranslation,
 } from '../../services/restaurantApi';
 import { getApiBaseUrl } from '../../utils/api';
 
@@ -377,12 +377,12 @@ const RestaurantAchievements: React.FC = () => {
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
           <h2 className="text-xl font-bold text-slate-800">Display Status - Achievements Section</h2>
           <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${isDisplaying ? 'text-emerald-600' : 'text-slate-500'}`}>
+            <span className={`text-sm font-medium ${isDisplaying ? 'text-green-600' : 'text-slate-500'}`}>
               {isDisplaying ? 'Displaying' : 'Hidden'}
             </span>
             <label className="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" className="peer sr-only" checked={isDisplaying} onChange={(e) => void handleDisplayStatusChange(e.target.checked)} disabled={savingDisplayStatus} />
-              <div className="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+              <div className="h-6 w-11 rounded-full bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white disabled:opacity-50 disabled:cursor-not-allowed" />
             </label>
           </div>
         </div>
@@ -436,7 +436,7 @@ const RestaurantAchievements: React.FC = () => {
         <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800">Achievements Management</h2>
-            <p className="mt-1 text-sm text-slate-500">Manage awards, certifications, milestones, and featured recognition for the restaurant brand.</p>
+            <p className="mt-1 text-sm text-slate-500">Manage awards, certifications, milestones, and featured recognition for the amusement park brand.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)} className="h-11 min-w-[140px] rounded-md border border-slate-300 px-4 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500">
@@ -612,7 +612,6 @@ const RestaurantAchievements: React.FC = () => {
                           <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Achievement media ${mediaId}`} className="h-24 w-full object-cover" />
                           {isPrimary && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                            {!isPrimary && <button type="button" onClick={() => handleSetPrimaryMedia(mediaId)} className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Set Primary</button>}
                             <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
                           </div>
                         </div>

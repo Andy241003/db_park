@@ -11,8 +11,8 @@ $propertyId = 10
 # Step 1: Login to get access token
 Write-Host "`n1. Logging in..." -ForegroundColor Yellow
 $loginBody = @{
-    username = "admin@travel.link360.vn"
-    password = "SuperSecretPass123"
+    username = "test@park.com"
+    password = "test123"
 } | ConvertTo-Json
 
 try {

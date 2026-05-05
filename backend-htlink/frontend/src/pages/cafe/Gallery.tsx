@@ -371,7 +371,7 @@ const RestaurantGallery: React.FC = () => {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Media Library</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Store and organize images, videos, documents for your restaurant content
+              Store and organize images, videos, and documents for your amusement park content
             </p>
           </div>
 

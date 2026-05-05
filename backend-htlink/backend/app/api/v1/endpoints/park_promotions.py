@@ -1,7 +1,7 @@
 """
 Restaurant Promotions API endpoints.
 
-Handles restaurant promotions and special offers with multi-language support
+Handles Restaurant Promotions and special offers with multi-language support
 """
 from typing import Optional, List
 from datetime import date
@@ -21,6 +21,7 @@ from app.models.restaurant import (
     PromotionType
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -126,6 +127,13 @@ def get_promotion_with_relations(promotion_id: int, db: Session) -> dict:
     
     return {
         **promotion.model_dump(),
+        "start_date": promotion.valid_from,
+        "end_date": promotion.valid_to,
+        "applicable_menu_items": (promotion.attributes_json or {}).get("applicable_menu_items"),
+        "applicable_categories": (promotion.attributes_json or {}).get("applicable_categories"),
+        "applicable_branches": (promotion.attributes_json or {}).get("applicable_branches"),
+        "min_purchase_amount": promotion.min_order_value,
+        "is_active": promotion.status == "active",
         "translations": [
             PromotionTranslationSchema(
                 locale=t.locale,
@@ -161,7 +169,7 @@ def get_promotions(
     )
     
     if is_active is not None:
-        statement = statement.where(CafePromotion.is_active == is_active)
+        statement = statement.where(CafePromotion.status == ("active" if is_active else "inactive"))
     
     if is_featured is not None:
         statement = statement.where(CafePromotion.is_featured == is_featured)
@@ -180,14 +188,14 @@ def get_promotions(
             code=promotion.code,
             promotion_type=promotion.promotion_type,
             discount_value=promotion.discount_value,
-            start_date=promotion.start_date,
-            end_date=promotion.end_date,
-            applicable_menu_items=promotion.applicable_menu_items,
-            applicable_categories=promotion.applicable_categories,
-            applicable_branches=promotion.applicable_branches,
-            min_purchase_amount=promotion.min_purchase_amount,
+            start_date=promotion.valid_from,
+            end_date=promotion.valid_to,
+            applicable_menu_items=(promotion.attributes_json or {}).get("applicable_menu_items"),
+            applicable_categories=(promotion.attributes_json or {}).get("applicable_categories"),
+            applicable_branches=(promotion.attributes_json or {}).get("applicable_branches"),
+            min_purchase_amount=promotion.min_order_value,
             primary_image_media_id=promotion.primary_image_media_id,
-            is_active=promotion.is_active,
+            is_active=promotion.status == "active",
             is_featured=promotion.is_featured,
             display_order=promotion.display_order,
             attributes_json=promotion.attributes_json,
@@ -246,10 +254,17 @@ def create_promotion(
     if existing:
         raise HTTPException(status_code=400, detail="Promotion code already exists")
     
-    new_promo = CafePromotion(
-        tenant_id=current_user.tenant_id,
-        **promo_data.model_dump(exclude={'translations', 'media_ids'})
-    )
+    payload = promo_data.model_dump(exclude={'translations', 'media_ids'})
+    attributes_json = payload.pop("attributes_json", None) or {}
+    attributes_json["applicable_menu_items"] = payload.pop("applicable_menu_items", None)
+    attributes_json["applicable_categories"] = payload.pop("applicable_categories", None)
+    attributes_json["applicable_branches"] = payload.pop("applicable_branches", None)
+    payload["valid_from"] = payload.pop("start_date", None)
+    payload["valid_to"] = payload.pop("end_date", None)
+    payload["min_order_value"] = payload.pop("min_purchase_amount", None)
+    payload["status"] = "active" if payload.pop("is_active", True) else "inactive"
+    payload["attributes_json"] = attributes_json
+    new_promo = CafePromotion(tenant_id=current_user.tenant_id, **payload)
     
     db.add(new_promo)
     db.commit()
@@ -306,13 +321,32 @@ def update_promotion(
     if not promotion or promotion.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Promotion not found")
     
-    for key, value in promo_data.model_dump(
+    update_data = promo_data.model_dump(
         exclude_unset=True,
         exclude={'translations', 'media_ids'}
-    ).items():
+    )
+    if "attributes_json" in update_data and update_data["attributes_json"] is None:
+        update_data["attributes_json"] = {}
+    update_data["attributes_json"] = update_data.get("attributes_json") or promotion.attributes_json or {}
+    if "applicable_menu_items" in update_data:
+        update_data["attributes_json"]["applicable_menu_items"] = update_data.pop("applicable_menu_items")
+    if "applicable_categories" in update_data:
+        update_data["attributes_json"]["applicable_categories"] = update_data.pop("applicable_categories")
+    if "applicable_branches" in update_data:
+        update_data["attributes_json"]["applicable_branches"] = update_data.pop("applicable_branches")
+    if "start_date" in update_data:
+        update_data["valid_from"] = update_data.pop("start_date")
+    if "end_date" in update_data:
+        update_data["valid_to"] = update_data.pop("end_date")
+    if "min_purchase_amount" in update_data:
+        update_data["min_order_value"] = update_data.pop("min_purchase_amount")
+    if "is_active" in update_data:
+        update_data["status"] = "active" if update_data.pop("is_active") else "inactive"
+
+    for key, value in update_data.items():
         if value is not None:
             setattr(promotion, key, value)
-            if key in ['applicable_menu_items', 'applicable_categories', 'applicable_branches', 'attributes_json']:
+            if key in ['attributes_json']:
                 flag_modified(promotion, key)
     
     db.add(promotion)
@@ -386,22 +420,16 @@ def delete_promotion(
     
     if not promotion or promotion.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Promotion not found")
-    
-    promo_title = promotion.code
+
+    delete_related_rows(db, CafePromotionTranslation, CafePromotionTranslation.promotion_id == promotion_id)
+    delete_related_rows(db, CafePromotionMedia, CafePromotionMedia.promotion_id == promotion_id)
+
+    db.flush()
     db.delete(promotion)
     db.commit()
-
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_POST,
-        f'Promotion "{promo_title}" deleted',
-        resource_type="restaurant_promotion",
-        resource_id=promotion_id,
-        extra_details={"title": promo_title, "code": promotion.code},
-    )
     
     return {"success": True, "message": "Promotion deleted"}
+
 
 
 

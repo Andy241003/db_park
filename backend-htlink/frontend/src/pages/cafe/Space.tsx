@@ -20,6 +20,8 @@ interface SpaceFormData {
   is_active: boolean;
   display_order: number;
   amenities_text: string;
+  vr360_url?: string;
+  attributes_json?: Record<string, unknown> | null;
   media_ids: number[];
   translations: Record<string, { name: string; description: string }>;
 }
@@ -101,6 +103,8 @@ const RestaurantSpace: React.FC = () => {
       is_active: true,
       display_order: spaces.length,
       amenities_text: '',
+      vr360_url: '',
+      attributes_json: null,
       media_ids: [],
       translations: makeTranslations(),
     });
@@ -121,6 +125,8 @@ const RestaurantSpace: React.FC = () => {
       is_active: space.is_active,
       display_order: space.display_order,
       amenities_text: amenities,
+      vr360_url: space.attributes_json?.vr360_url ? String(space.attributes_json.vr360_url) : '',
+      attributes_json: space.attributes_json ?? null,
       media_ids: mediaIds,
       translations: makeTranslations(space),
     });
@@ -242,6 +248,15 @@ const RestaurantSpace: React.FC = () => {
         .split(',')
         .map((item) => item.trim())
         .filter(Boolean),
+      attributes_json: (() => {
+        const nextAttributes = { ...(editingSpace.attributes_json ?? {}) } as Record<string, unknown>;
+        if (editingSpace.vr360_url?.trim()) {
+          nextAttributes.vr360_url = editingSpace.vr360_url.trim();
+        } else {
+          delete nextAttributes.vr360_url;
+        }
+        return Object.keys(nextAttributes).length > 0 ? nextAttributes : undefined;
+      })(),
       media_ids: editingSpace.media_ids,
       translations,
     };
@@ -410,10 +425,15 @@ const RestaurantSpace: React.FC = () => {
       <div className={SECTION_CLASS}>
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
           <h2 className="text-xl font-bold text-slate-800">Display Status - Spaces Section</h2>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" className="sr-only peer" checked={isDisplaying} onChange={(e) => handleDisplayToggle(e.target.checked)} disabled={savingDisplayStatus} />
-            <div className="w-11 h-6 bg-slate-200 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-full"></div>
-          </label>
+          <div className="flex items-center gap-3">
+            <span className={`text-sm font-medium ${isDisplaying ? 'text-green-600' : 'text-slate-500'}`}>
+              {isDisplaying ? 'Displaying' : 'Hidden'}
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={isDisplaying} onChange={(e) => handleDisplayToggle(e.target.checked)} disabled={savingDisplayStatus} />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:bg-white after:rounded-full after:transition-all peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white disabled:opacity-50 disabled:cursor-not-allowed"></div>
+            </label>
+          </div>
         </div>
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
           <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 text-blue-600" />
@@ -611,6 +631,9 @@ const RestaurantSpace: React.FC = () => {
                 <div><label className={LABEL_CLASS}>Capacity (people)</label><input type="number" className={FIELD_CLASS} value={editingSpace.capacity || ''} onChange={(e) => handleFieldChange('capacity', parseInt(e.target.value, 10) || undefined)} /></div>
                 <div><label className={LABEL_CLASS}>Area Size</label><input className={FIELD_CLASS} value={editingSpace.area_size || ''} onChange={(e) => handleFieldChange('area_size', e.target.value)} placeholder="e.g., 100 m2" /></div>
                 <div><label className={LABEL_CLASS}>Display Order</label><input type="number" className={FIELD_CLASS} value={editingSpace.display_order} onChange={(e) => handleFieldChange('display_order', parseInt(e.target.value, 10) || 0)} /></div>
+                <div className="sm:col-span-2"><label className={LABEL_CLASS}>VR360 Tour Link</label><input className={FIELD_CLASS} value={editingSpace.vr360_url || ''} onChange={(e) => handleFieldChange('vr360_url', e.target.value)} placeholder="https://example.com/vr-tour" />
+                  <p className="mt-1 text-xs text-slate-500">Optional item-level VR tour link for this space.</p>
+                </div>
               </div>
 
               <div className="mt-4">
@@ -669,7 +692,6 @@ const RestaurantSpace: React.FC = () => {
                       <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Space media ${mediaId}`} className="h-24 w-full object-cover" />
                       {editingSpace.primary_image_media_id === mediaId && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                        {editingSpace.primary_image_media_id !== mediaId && <button type="button" onClick={() => handleFieldChange('primary_image_media_id', mediaId)} className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Set Primary</button>}
                         <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
                       </div>
                     </div>

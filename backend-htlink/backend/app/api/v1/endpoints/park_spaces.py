@@ -1,7 +1,7 @@
 """
 Restaurant Spaces API endpoints.
 
-Handles restaurant spaces/areas management with multi-language support
+Handles Restaurant Spaces/areas management with multi-language support
 """
 from typing import Any, Optional, List
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,6 +19,7 @@ from app.models.restaurant import (
     CafeSpaceMedia
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -250,7 +251,7 @@ def create_space(
         current_user,
         ActivityType.CREATE_PROPERTY,
         f'Space "{space_name}" created',
-        resource_type="restaurant_space",
+        resource_type="park_space",
         resource_id=new_space.id,
         extra_details={"title": space_name, "code": new_space.code},
     )
@@ -325,7 +326,7 @@ def update_space(
         current_user,
         ActivityType.UPDATE_PROPERTY,
         f'Space "{space_name}" updated',
-        resource_type="restaurant_space",
+        resource_type="park_space",
         resource_id=space_id,
         extra_details={"title": space_name, "code": space.code},
     )
@@ -345,20 +346,13 @@ def delete_space(
     
     if not space or space.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Space not found")
-    
-    space_name = space.code
+
+    delete_related_rows(db, CafeSpaceTranslation, CafeSpaceTranslation.space_id == space_id)
+    delete_related_rows(db, CafeSpaceMedia, CafeSpaceMedia.space_id == space_id)
+
+    db.flush()
     db.delete(space)
     db.commit()
-
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_PROPERTY,
-        f'Space "{space_name}" deleted',
-        resource_type="restaurant_space",
-        resource_id=space_id,
-        extra_details={"title": space_name, "code": space.code},
-    )
     
     return {"success": True, "message": "Space deleted"}
 
@@ -378,6 +372,7 @@ def reorder_spaces(
     
     db.commit()
     return {"success": True, "message": "Spaces reordered"}
+
 
 
 

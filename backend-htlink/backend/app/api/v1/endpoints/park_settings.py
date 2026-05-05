@@ -1,11 +1,13 @@
 """
 Restaurant Settings API endpoints
 
-Handles restaurant settings, contact, branding, and page configurations.
+Handles Restaurant settings, contact, branding, and page configurations.
 """
+import time
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.attributes import flag_modified
 from pydantic import BaseModel
 
@@ -13,6 +15,23 @@ from app.api.deps import CurrentUser, SessionDep
 from app.models.restaurant import CafeSettings, CafePageSettings
 
 router = APIRouter()
+
+
+def commit_with_retry(db, retries: int = 3, delay: float = 0.5):
+    """Commit with retry on MySQL lock wait timeout."""
+    attempt = 0
+    while True:
+        try:
+            db.commit()
+            return
+        except OperationalError as exc:
+            # MySQL lock wait timeout error code
+            if getattr(exc.orig, 'args', None) and exc.orig.args[0] == 1205 and attempt < retries:
+                db.rollback()
+                time.sleep(delay * (attempt + 1))
+                attempt += 1
+                continue
+            raise
 
 
 # ==========================================
@@ -23,7 +42,7 @@ class CafeSettingsResponse(BaseModel):
     """Restaurant Settings Response"""
     id: Optional[int] = None
     tenant_id: Optional[int] = None
-    restaurant_name: str
+    park_name: str
     slogan: Optional[str] = None
     primary_color: str = "#6f4e37"
     secondary_color: str = "#d4a574"
@@ -44,7 +63,7 @@ class CafeSettingsResponse(BaseModel):
 
 class CafeSettingsUpdate(BaseModel):
     """Restaurant Settings Update"""
-    restaurant_name: Optional[str] = None
+    park_name: Optional[str] = None
     slogan: Optional[str] = None
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
@@ -97,7 +116,30 @@ def to_restaurant_settings_response(
     settings: CafeSettings | CafeSettingsResponse,
     tenant_id: int,
 ) -> CafeSettingsResponse:
-    payload = settings.model_dump()
+    if isinstance(settings, CafeSettingsResponse):
+        payload = settings.model_dump()
+    else:
+        payload = {
+            "id": settings.id,
+            "tenant_id": tenant_id,
+            "park_name": settings.park_name,
+            "slogan": settings.slogan,
+            "primary_color": settings.primary_color,
+            "secondary_color": settings.secondary_color,
+            "background_color": settings.background_color,
+            "booking_url": settings.booking_url,
+            "messenger_url": settings.messenger_url,
+            "phone_number": settings.support_phone,
+            "logo_media_id": settings.logo_media_id,
+            "favicon_media_id": settings.favicon_media_id,
+            "cover_image_media_id": settings.cover_image_media_id,
+            "meta_image_media_id": settings.meta_image_media_id,
+            "meta_title": settings.meta_title,
+            "meta_description": settings.meta_description,
+            "meta_keywords": settings.meta_keywords,
+            "business_hours": settings.operating_hours,
+            "settings_json": settings.settings_json,
+        }
     payload["tenant_id"] = tenant_id
     return CafeSettingsResponse(**payload)
 
@@ -130,14 +172,14 @@ def get_restaurant_settings(
     db: SessionDep
 ):
     """
-    Get restaurant settings for current tenant
+    Get Restaurant settings for current tenant
     """
     settings = get_restaurant_settings_record(db, current_user.tenant_id)
 
     if not settings:
         return CafeSettingsResponse(
             tenant_id=current_user.tenant_id,
-            restaurant_name="My Restaurant",
+            park_name="My Restaurant",
             primary_color="#6f4e37",
             secondary_color="#d4a574",
             background_color="#ffffff"
@@ -153,15 +195,23 @@ def create_or_update_restaurant_settings(
     db: SessionDep
 ):
     """
-    Create or update restaurant settings
+    Create or update Restaurant settings
     """
     existing = get_restaurant_settings_record(db, current_user.tenant_id)
 
     if existing:
-        for key, value in settings_data.model_dump(exclude_unset=True).items():
+        update_data = settings_data.model_dump(exclude_unset=True)
+        if "park_name" in update_data:
+            update_data["park_name"] = update_data.pop("park_name")
+        if "phone_number" in update_data:
+            update_data["support_phone"] = update_data.pop("phone_number")
+        if "business_hours" in update_data:
+            update_data["operating_hours"] = update_data.pop("business_hours")
+
+        for key, value in update_data.items():
             if hasattr(existing, key):
                 setattr(existing, key, value)
-                if key in ['business_hours', 'settings_json']:
+                if key in ['operating_hours', 'settings_json']:
                     flag_modified(existing, key)
 
         db.add(existing)
@@ -170,8 +220,14 @@ def create_or_update_restaurant_settings(
         return to_restaurant_settings_response(existing, current_user.tenant_id)
 
     settings_dict = settings_data.model_dump(exclude_unset=True)
-    if 'restaurant_name' not in settings_dict or settings_dict.get('restaurant_name') is None:
-        settings_dict['restaurant_name'] = 'My Restaurant'
+    if 'park_name' in settings_dict:
+        settings_dict['park_name'] = settings_dict.pop('park_name')
+    if 'phone_number' in settings_dict:
+        settings_dict['support_phone'] = settings_dict.pop('phone_number')
+    if 'business_hours' in settings_dict:
+        settings_dict['operating_hours'] = settings_dict.pop('business_hours')
+    if 'park_name' not in settings_dict or settings_dict.get('park_name') is None:
+        settings_dict['park_name'] = 'My Restaurant'
 
     new_settings = CafeSettings(
         tenant_id=current_user.tenant_id,
@@ -244,7 +300,7 @@ def create_or_update_page_setting(
                     flag_modified(existing, key)
 
         db.add(existing)
-        db.commit()
+        commit_with_retry(db)
         db.refresh(existing)
         return to_page_settings_response(existing, current_user.tenant_id)
 
@@ -253,7 +309,7 @@ def create_or_update_page_setting(
         **page_data.model_dump(exclude_unset=True),
     )
     db.add(new_page)
-    db.commit()
+    commit_with_retry(db)
     db.refresh(new_page)
     return to_page_settings_response(new_page, current_user.tenant_id)
 
@@ -276,6 +332,7 @@ def delete_page_setting(
     db.commit()
 
     return {"success": True, "message": "Page setting deleted"}
+
 
 
 

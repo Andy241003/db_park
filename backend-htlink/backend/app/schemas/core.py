@@ -100,7 +100,7 @@ class LocaleResponse(LocaleBase):
 class AdminUserBase(BaseModel):
     email: str = Field(max_length=190)
     full_name: str = Field(max_length=180)
-    role: UserRole = UserRole.EDITOR
+    role: UserRole = UserRole.ADMIN
     # service_access: Removed - Cafe only system
     is_active: bool = True
 

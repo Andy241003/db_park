@@ -166,8 +166,8 @@ await vrHotelIntroductionApi.updateIntroduction(formData);
 1. **Login vào VR Hotel Admin**
    ```
    URL: http://localhost:5173
-   Email: admin@travel.link360.vn
-   Password: SuperSecretPass123
+   Email: test@park.com
+   Password: test123
    ```
 
 2. **Vào trang Introduction**

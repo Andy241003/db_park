@@ -1,7 +1,7 @@
 """
 Restaurant Careers API endpoints.
 
-Handles restaurant career/job postings with multi-language support
+Handles Restaurant Career/job postings with multi-language support
 """
 from typing import Optional, List
 from datetime import date
@@ -21,6 +21,7 @@ from app.models.restaurant import (
     CareerStatus
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -137,7 +138,7 @@ def get_career_with_translations(career_id: int, db: Session) -> dict:
         "contact_email": career.contact_email,
         "contact_phone": career.contact_phone,
         "application_url": career.application_url,
-        "branch_id": career.branch_id,
+        "branch_id": career.location_id,
         "primary_image_media_id": career.primary_image_media_id,
         "status": career.status,
         "display_order": career.display_order,
@@ -199,7 +200,7 @@ def get_careers(
             "contact_email": career.contact_email,
             "contact_phone": career.contact_phone,
             "application_url": career.application_url,
-            "branch_id": career.branch_id,
+            "branch_id": career.location_id,
             "primary_image_media_id": career.primary_image_media_id,
             "status": career.status,
             "display_order": career.display_order,
@@ -255,13 +256,12 @@ def create_career(
     if existing:
         raise HTTPException(status_code=400, detail="Career code already exists")
     
-    new_career = CafeCareer(
-        tenant_id=current_user.tenant_id,
-        **career_data.model_dump(exclude={'translations', 'media_ids'})
-    )
+    payload = career_data.model_dump(exclude={"translations", "media_ids"})
+    payload["location_id"] = payload.pop("branch_id", None)
+    new_career = CafeCareer(tenant_id=current_user.tenant_id, **payload)
     
     # Convert empty strings to None for optional string fields
-    for key, value in career_data.model_dump(exclude={'translations', 'media_ids'}).items():
+    for key, value in payload.items():
         if isinstance(value, str) and value.strip() == "":
             setattr(new_career, key, None)
     
@@ -322,10 +322,14 @@ def update_career(
     if not career or career.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Career posting not found")
     
-    for key, value in career_data.model_dump(
+    update_data = career_data.model_dump(
         exclude_unset=True,
         exclude={'translations', 'media_ids'}
-    ).items():
+    )
+    if "branch_id" in update_data:
+        update_data["location_id"] = update_data.pop("branch_id")
+
+    for key, value in update_data.items():
         if value is not None:
             # Convert empty strings to None for optional string fields
             if isinstance(value, str) and value.strip() == "":
@@ -405,22 +409,16 @@ def delete_career(
     
     if not career or career.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Career posting not found")
-    
-    career_title = career.code
+
+    delete_related_rows(db, CafeCareerTranslation, CafeCareerTranslation.career_id == career_id)
+    delete_related_rows(db, CafeCareerMedia, CafeCareerMedia.career_id == career_id)
+
+    db.flush()
     db.delete(career)
     db.commit()
-
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_POST,
-        f'Career "{career_title}" deleted',
-        resource_type="restaurant_career",
-        resource_id=career_id,
-        extra_details={"title": career_title, "code": career.code},
-    )
     
     return {"success": True, "message": "Career posting deleted"}
+
 
 
 

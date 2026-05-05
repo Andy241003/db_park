@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-// MainLayout & DashboardSelection - REMOVED (Cafe only)
+// Legacy imports removed from the active park runtime
 // import MainLayout from './layouts/MainLayout';
 // import DashboardSelection from './pages/DashboardSelection';
 import Login from './pages/Login';
@@ -16,34 +16,37 @@ import AdminLayout from './pages/admin/AdminLayout';
 import SharedSettingsLayout from './layouts/SharedSettingsLayout';
 import Media from './pages/Media';
 
-// VR Hotel imports - REMOVED (Cafe only)
+// VR Hotel imports kept out of the active park runtime
 // import VRHotelActivities from './pages/vr-hotel/Activities';
 // import VRHotelContact from './pages/vr-hotel/Contact';
 // ... (all VR Hotel imports removed)
 
-// Travel Link imports - REMOVED (Cafe only)
+// Travel Link imports kept out of the active park runtime
 // import MainLayout from './layouts/MainLayout';
 // import DashboardSelection from './pages/DashboardSelection';
 
-// Restaurant imports
-import RestaurantActivities from './pages/restaurant/Activities';
-import RestaurantAchievements from './pages/restaurant/Achievements';
-import RestaurantBranches from './pages/restaurant/Branches';
-import RestaurantCareers from './pages/restaurant/Careers';
-import RestaurantContact from './pages/restaurant/Contact';
-import RestaurantDashboard from './pages/restaurant/Dashboard';
-import RestaurantEvents from './pages/restaurant/Events';
-import RestaurantGallery from './pages/restaurant/Gallery';
-import RestaurantAbout from './pages/restaurant/About';
-import RestaurantHome from './pages/restaurant/Home';
-import RestaurantLanguages from './pages/restaurant/Languages';
-import RestaurantLayout from './pages/restaurant/RestaurantLayout';
-import RestaurantMenu from './pages/restaurant/Menu';
-import RestaurantPromotions from './pages/restaurant/Promotions';
-import RestaurantSettings from './pages/restaurant/Settings';
-import RestaurantSpace from './pages/restaurant/Space';
-import RestaurantUsers from './pages/restaurant/Users';
-import RestaurantTenants from './pages/restaurant/Tenants';
+// Park admin imports currently re-exported from compatibility paths
+import ParkAchievements from './pages/restaurant/Achievements';
+import ParkActivities from './pages/restaurant/Activities';
+import ParkAttractions from './pages/restaurant/Attractions';
+import ParkCareers from './pages/restaurant/Careers';
+import ParkContact from './pages/restaurant/Contact';
+import ParkDashboard from './pages/restaurant/Dashboard';
+import ParkDining from './pages/restaurant/Dining';
+import ParkEvents from './pages/restaurant/Events';
+import ParkGallery from './pages/restaurant/Gallery';
+import ParkHome from './pages/restaurant/Home';
+import ParkIntroduction from './pages/restaurant/Introduction';
+import ParkLanguages from './pages/restaurant/Languages';
+import ParkMapTour from './pages/restaurant/MapTour';
+import ParkPromotions from './pages/restaurant/Promotions';
+import ParkLayout from './pages/restaurant/RestaurantLayout';
+import ParkServices from './pages/restaurant/Services';
+import ParkSettings from './pages/restaurant/Settings';
+import ParkTenants from './pages/restaurant/Tenants';
+import ParkTicketTypes from './pages/restaurant/TicketTypes';
+import ParkUsers from './pages/restaurant/Users';
+import ParkVisitorInformation from './pages/restaurant/VisitorInformation';
 import { autoDetectLanguage } from './utils/languageDetection';
 
 // Create a client
@@ -109,12 +112,12 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
             
-            {/* Dashboard Selection - REMOVED (Cafe only) */}
+            {/* Legacy dashboard selection removed from the active park runtime */}
             {/* <Route path="/dashboard-selection" element={...} /> */}
             
             {/* Core Admin Routes - Super Admin only */}
@@ -143,35 +146,48 @@ function App() {
               } 
             />
             
-            {/* VR Hotel Routes - REMOVED (Cafe only) */}
+            {/* VR Hotel routes are intentionally separate from the park runtime */}
             {/* <Route path="/vr-hotel/*" element={...} /> */}
 
-            {/* Restaurant Routes */}
+            {/* Park Admin Routes */}
             <Route 
-              path="/restaurant/*" 
+              path="/park/*" 
               element={
                 isAuthenticated ? (
                   <ProtectedRoute>
                     <Routes>
-                      <Route element={<RestaurantLayout />}>
-                        <Route path="" element={<RestaurantDashboard />} />
-                        <Route path="activities" element={<RestaurantActivities />} />
-                        <Route path="users" element={<RestaurantUsers />} />
-                        <Route path="tenants" element={<ProtectedRoute requireAdmin><RestaurantTenants /></ProtectedRoute>} />
-                        <Route path="home" element={<RestaurantHome />} />
-                        <Route path="about" element={<RestaurantAbout />} />
-                        <Route path="menu" element={<RestaurantMenu />} />
-                        <Route path="space" element={<RestaurantSpace />} />
-                        <Route path="branches" element={<RestaurantBranches />} />
-                        <Route path="events" element={<RestaurantEvents />} />
-                        <Route path="careers" element={<RestaurantCareers />} />
-                        <Route path="promotions" element={<RestaurantPromotions />} />
-                        <Route path="achievements" element={<RestaurantAchievements />} />
-                        <Route path="gallery" element={<RestaurantGallery />} />
-                        <Route path="media" element={<Media defaultSource="restaurant" />} />
-                        <Route path="contact" element={<RestaurantContact />} />
-                        <Route path="languages" element={<RestaurantLanguages />} />
-                        <Route path="settings" element={<RestaurantSettings />} />
+                      <Route element={<ParkLayout />}>
+                        <Route path="" element={<ParkDashboard />} />
+                        <Route path="activities" element={<ParkActivities />} />
+                        <Route path="users" element={<ParkUsers />} />
+                        <Route path="tenants" element={<ProtectedRoute requireAdmin><ParkTenants /></ProtectedRoute>} />
+                        <Route path="home" element={<ParkHome />} />
+                        <Route path="info" element={<Navigate to="/park/home" replace />} />
+                        <Route path="introduction" element={<ParkIntroduction />} />
+                        <Route path="about" element={<Navigate to="/park/introduction" replace />} />
+                        <Route path="visit-info" element={<ParkVisitorInformation />} />
+                        <Route path="menu" element={<Navigate to="/park/dining-services" replace />} />
+                        <Route path="ticket-types" element={<ParkTicketTypes />} />
+                        <Route path="dining-services" element={<ParkDining />} />
+                        <Route path="space" element={<Navigate to="/park/map-tour" replace />} />
+                        <Route path="map-tour" element={<ParkMapTour />} />
+                        <Route path="branches" element={<Navigate to="/park/attractions" replace />} />
+                        <Route path="attractions" element={<ParkAttractions />} />
+                        <Route path="events" element={<ParkEvents />} />
+                        <Route path="schedule-events" element={<ParkEvents />} />
+                        <Route path="games-activities" element={<ParkEvents />} />
+                        <Route path="careers" element={<ParkCareers />} />
+                        <Route path="promotions" element={<ParkPromotions />} />
+                        <Route path="offers" element={<ParkPromotions />} />
+                        <Route path="achievements" element={<ParkAchievements />} />
+                        <Route path="gallery" element={<ParkGallery />} />
+                        <Route path="library" element={<ParkGallery />} />
+                        <Route path="media" element={<Media defaultSource="vr_hotel" />} />
+                        <Route path="contact" element={<ParkContact />} />
+                        <Route path="languages" element={<ParkLanguages />} />
+                        <Route path="services" element={<ParkServices />} />
+                        <Route path="services-support" element={<ParkServices />} />
+                        <Route path="settings" element={<ParkSettings />} />
                       </Route>
                     </Routes>
                   </ProtectedRoute>
@@ -181,13 +197,12 @@ function App() {
               } 
             />
 
-            {/* Travel Link Routes - REMOVED (Cafe only) */}
-            {/* Default route: redirect to Restaurant */}
+            {/* Default route: redirect to the active park dashboard */}
             <Route 
               path="/" 
-              element={isAuthenticated ? <Navigate to="/restaurant" replace /> : <Navigate to="/login" replace />} 
+              element={isAuthenticated ? <Navigate to="/park" replace /> : <Navigate to="/login" replace />} 
             />
-            <Route path="/*" element={<Navigate to="/restaurant" replace />} />
+            <Route path="/*" element={<Navigate to="/park" replace />} />
           </Routes>
         </div>
       </Router>

@@ -39,8 +39,18 @@ from .restaurant import (
     CafeService,
     CafeServiceTranslation,
     CafeServiceMedia,
+    CafeAttraction,
+    CafeAttractionTranslation,
+    CafeAttractionMedia,
+    CafeTicketType,
+    CafeTicketTypeTranslation,
+    CafeTicketTypeMedia,
     CafeContentSection,
     CafeContentSectionTranslation,
+    ParkVisitorInfoCategory,
+    CafeVisitorInfoCategoryTranslation,
+    CafeVisitorInfoItem,
+    CafeVisitorInfoItemTranslation,
     RestaurantSettings,
     RestaurantPageSettings,
     RestaurantBranch,
@@ -69,8 +79,18 @@ from .restaurant import (
     RestaurantService,
     RestaurantServiceTranslation,
     RestaurantServiceMedia,
+    RestaurantAttraction,
+    RestaurantAttractionTranslation,
+    RestaurantAttractionMedia,
+    RestaurantTicketType,
+    RestaurantTicketTypeTranslation,
+    RestaurantTicketTypeMedia,
     RestaurantContentSection,
     RestaurantContentSectionTranslation,
+    RestaurantVisitorInfoCategory,
+    RestaurantVisitorInfoCategoryTranslation,
+    RestaurantVisitorInfoItem,
+    RestaurantVisitorInfoItemTranslation,
 )
 
 
@@ -152,7 +172,7 @@ class AdminUser(SQLModel, table=True):
     email: str = Field(max_length=190)
     password_hash: str = Field(max_length=255)
     full_name: str = Field(max_length=180)
-    role: UserRole = Field(default=UserRole.EDITOR)
+    role: UserRole = Field(default=UserRole.ADMIN)
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)
@@ -183,7 +203,7 @@ class AdminUserCreate(SQLModel):
     email: str
     password: str
     full_name: str
-    role: UserRole = UserRole.EDITOR
+    role: UserRole = UserRole.ADMIN
     tenant_id: int
 
 

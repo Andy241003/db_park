@@ -21,11 +21,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
-    cafeBranchesApi,
     cafeLanguagesApi,
     cafePromotionsApi,
     cafeSettingsApi,
-    type Branch,
     type Promotion,
     type PromotionCreate,
     type PromotionTranslation,
@@ -101,14 +99,6 @@ const getPromotionDescription = (promotion: Promotion) =>
   promotion.translations?.find((translation) => translation.description)?.description ||
   '';
 
-const getBranchName = (branch: Branch) =>
-  branch.translations?.find((translation) => translation.locale === 'vi')?.name ||
-  branch.translations?.find((translation) => translation.locale === 'en')?.name ||
-  branch.name_vi ||
-  branch.name_en ||
-  branch.code ||
-  'Unknown branch';
-
 const getPromotionValueLabel = (promotion: Promotion) => {
   if (promotion.discount_value == null) return 'No discount value';
   if (promotion.promotion_type === 'percentage') return `${promotion.discount_value}% off`;
@@ -145,15 +135,6 @@ const getPromotionStatusBadge = (promotion: Promotion) => {
   return { label: 'active', className: 'bg-emerald-100 text-emerald-700' };
 };
 
-const getBranchIdFromPromotion = (promotion: Promotion): number | null => {
-  const branchIds = promotion.applicable_branches?.branch_ids;
-  if (Array.isArray(branchIds) && branchIds.length > 0) {
-    const numericId = Number(branchIds[0]);
-    return Number.isFinite(numericId) ? numericId : null;
-  }
-  return null;
-};
-
 const convertToEmbedUrl = (url: string): string => {
   if (!url) return url;
   const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/;
@@ -167,7 +148,6 @@ const convertToEmbedUrl = (url: string): string => {
 const RestaurantPromotions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>(['vi', 'en']);
   const [currentLocale, setCurrentLocale] = useState('vi');
   const [isDisplaying, setIsDisplaying] = useState(true);
@@ -187,18 +167,16 @@ const RestaurantPromotions: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [promotionData, languages, settings, branchData] = await Promise.all([
+      const [promotionData, languages, settings] = await Promise.all([
         cafePromotionsApi.getPromotions(),
         cafeLanguagesApi.getLanguages(),
         cafeSettingsApi.getSettings(),
-        cafeBranchesApi.getBranches(),
       ]);
 
       const locales = languages.length > 0 ? languages.map((item) => item.locale) : ['vi', 'en'];
       setSupportedLanguages(locales);
       setCurrentLocale((previous) => (locales.includes(previous) ? previous : locales[0]));
       setPromotions(promotionData);
-      setBranches(branchData);
       setIsDisplaying(settings.settings_json?.promotions_is_displaying ?? true);
       setVr360Link(settings.settings_json?.promotions_vr360_link || '');
       setVrTitle(settings.settings_json?.promotions_vr_title || '');
@@ -243,7 +221,7 @@ const RestaurantPromotions: React.FC = () => {
     is_active: promotion?.is_active ?? true,
     is_featured: promotion?.is_featured ?? false,
     display_order: promotion?.display_order ?? promotions.length,
-    branch_id: promotion ? getBranchIdFromPromotion(promotion) ?? undefined : undefined,
+    branch_id: undefined,
     translations: makeTranslations(promotion),
   });
 
@@ -358,8 +336,6 @@ const RestaurantPromotions: React.FC = () => {
       return;
     }
 
-    const branchIds = editingPromotion.branch_id ? [editingPromotion.branch_id] : [];
-
     const payload: PromotionCreate = {
       code: editingPromotion.code.trim(),
       promotion_type: editingPromotion.promotion_type,
@@ -371,7 +347,7 @@ const RestaurantPromotions: React.FC = () => {
       is_active: editingPromotion.is_active,
       is_featured: editingPromotion.is_featured,
       display_order: Number.isFinite(editingPromotion.display_order) ? editingPromotion.display_order : promotions.length,
-      applicable_branches: branchIds.length > 0 ? { branch_ids: branchIds } : null,
+      applicable_branches: null,
       attributes_json: null,
       translations,
       media_ids: editingPromotion.media_ids,
@@ -438,12 +414,6 @@ const RestaurantPromotions: React.FC = () => {
     }
   };
 
-  const getBranchLabelById = (branchId?: number | null) => {
-    if (!branchId) return 'All branches';
-    const branch = branches.find((item) => item.id === branchId);
-    return branch ? getBranchName(branch) : 'Unknown branch';
-  };
-
   return (
     <div className="space-y-6">
       <div className={SECTION_CLASS}>
@@ -503,7 +473,7 @@ const RestaurantPromotions: React.FC = () => {
         <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800">Promotions Management</h2>
-            <p className="mt-1 text-sm text-slate-500">Manage promotion content, active period, featured deals, and visual highlights for the restaurant site.</p>
+            <p className="mt-1 text-sm text-slate-500">Manage promotion content, active period, featured deals, and visual highlights for the amusement park site.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <select value={promotionFilter} onChange={(e) => setPromotionFilter(e.target.value as typeof promotionFilter)} className="h-11 min-w-[140px] rounded-md border border-slate-300 px-4 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500">
@@ -530,7 +500,6 @@ const RestaurantPromotions: React.FC = () => {
               const title = getPromotionTitle(promotion);
               const description = getPromotionDescription(promotion);
               const statusBadge = getPromotionStatusBadge(promotion);
-              const branchLabel = getBranchLabelById(getBranchIdFromPromotion(promotion));
               const valueLabel = getPromotionValueLabel(promotion);
               const imageLabel = getPromotionImageCountLabel(promotion);
               const languageLabel = getPromotionLanguageLabel(promotion);
@@ -563,7 +532,7 @@ const RestaurantPromotions: React.FC = () => {
                             <span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarAlt} className="text-blue-500" />{startDateLabel}</span>
                             <span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faCalendarAlt} className="text-blue-500" />{endDateLabel}</span>
                             <span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={promotion.promotion_type === 'percentage' ? faPercent : faMoneyBillWave} className="text-blue-500" />{valueLabel}</span>
-                            <span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faTag} className="text-blue-500" />{branchLabel}</span>
+                            <span className="inline-flex items-center gap-2"><FontAwesomeIcon icon={faTag} className="text-blue-500" />Park-wide offer</span>
                           </div>
                           <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">{imageLabel}</span>
@@ -643,15 +612,6 @@ const RestaurantPromotions: React.FC = () => {
                   <input type="date" className={FIELD_CLASS} value={editingPromotion.end_date} onChange={(e) => handleFieldChange('end_date', e.target.value)} />
                 </div>
                 <div>
-                  <label className={LABEL_CLASS}>Branch</label>
-                  <select className={FIELD_CLASS} value={editingPromotion.branch_id ?? ''} onChange={(e) => handleFieldChange('branch_id', e.target.value ? Number(e.target.value) : undefined)}>
-                    <option value="">All branches / not assigned</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>{getBranchName(branch)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className={LABEL_CLASS}>Display Order</label>
                   <input type="number" className={FIELD_CLASS} value={editingPromotion.display_order} onChange={(e) => handleFieldChange('display_order', Number(e.target.value))} />
                 </div>
@@ -702,7 +662,6 @@ const RestaurantPromotions: React.FC = () => {
                           <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Promotion media ${mediaId}`} className="h-24 w-full object-cover" />
                           {isPrimary && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                           <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                            {!isPrimary && <button type="button" onClick={() => handleSetPrimaryMedia(mediaId)} className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700">Set Primary</button>}
                             <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
                           </div>
                         </div>

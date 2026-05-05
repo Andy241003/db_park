@@ -88,6 +88,18 @@ export interface ActivityItem {
 
 export interface LoginResponse {
   access_token: string;
+  user_info?: {
+    id: number;
+    email: string;
+    full_name: string;
+    is_active: boolean;
+    tenant_id: number;
+  };
+  tenant_info?: {
+    id?: number;
+    code?: string | null;
+    name?: string | null;
+  };
 }
 
 export interface User {
@@ -204,20 +216,26 @@ export interface PropertyCategory extends FeatureCategory {
 export const authAPI = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const { username, password } = credentials;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
     
     const response: AxiosResponse<LoginResponse> = await axios.post(
       `${API_BASE_URL}/auth/login`,
       `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
+      { headers }
     );
     
     // Save token to localStorage (tenant is auto-detected by backend)
     localStorage.setItem('access_token', response.data.access_token);
     localStorage.setItem('isAuthenticated', 'true');
+    if (response.data.user_info?.tenant_id) {
+      localStorage.setItem('tenant_id', response.data.user_info.tenant_id.toString());
+    }
+    if (response.data.tenant_info?.code) {
+      localStorage.setItem('tenant_code', response.data.tenant_info.code);
+      localStorage.setItem('tenant_name', response.data.tenant_info.name || response.data.tenant_info.code);
+    }
     
     return response.data;
   },

@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, HTTPException, Request, Header, Form
 from pydantic import BaseModel
 from sqlmodel import select
 
@@ -67,28 +66,74 @@ def _log_auth_activity_if_new(
 
 
 @router.post("/login")
-def login(
+async def login(
     request: Request,
     session: SessionDep,
-    form_data: OAuth2PasswordRequestForm = Depends()
+    username: str | None = Form(default=None),
+    password: str | None = Form(default=None),
+    tenant_code: str | None = Form(default=None),
+    x_tenant_code: str | None = Header(default=None, alias="X-Tenant-Code"),
 ):
     """
     Login endpoint with username/password authentication
     
     POST /api/v1/auth/login
     Form data:
-    - username: admin@travel.link360.vn
+    - username: test@park.com
     - password: use the configured FIRST_SUPERUSER_PASSWORD value
     
     Backend automatically finds the correct tenant for the user
     Returns access token for external apps to use
     """
-    # Find user (single-tenant setup)
+    body_username = username
+    body_password = password
+    body_tenant_code = tenant_code
+
+    if body_username is None or body_password is None:
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
+            try:
+                payload = await request.json()
+            except Exception:
+                payload = {}
+            body_username = body_username or payload.get("username") or payload.get("email")
+            body_password = body_password or payload.get("password")
+            body_tenant_code = body_tenant_code or payload.get("tenant_code")
+
+    tenant_code_value = x_tenant_code or body_tenant_code
+    tenant_id = None
+    if tenant_code_value:
+        tenant = crud.tenant.get_by_code(session, code=tenant_code_value)
+        if not tenant:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Tenant '{tenant_code_value}' not found"
+            )
+        tenant_id = tenant.id
+
+    if not body_username or not body_password:
+        raise HTTPException(
+            status_code=400,
+            detail="Username and password are required"
+        )
+
     user = crud.admin_user.authenticate(
         db=session,
-        email=form_data.username,
-        password=form_data.password
+        email=body_username,
+        password=body_password,
+        tenant_id=tenant_id,
     )
+    
+    # If no tenant specified, try to find user across all tenants
+    if not user and tenant_id is None:
+        # Get all users with this email
+        from sqlmodel import select
+        users = session.exec(select(AdminUser).where(AdminUser.email == body_username)).all()
+        # Find active user
+        for u in users:
+            if u.is_active and security.verify_password(body_password, u.password_hash):
+                user = u
+                break
     
     if not user:
         raise HTTPException(
@@ -119,6 +164,8 @@ def login(
         username=user.email,
         client_ip=client_ip,
     )
+
+    tenant = session.get(Tenant, user.tenant_id) if user.tenant_id else None
     
     # Return token with user info
     return {
@@ -130,7 +177,12 @@ def login(
             "full_name": user.full_name,
             "is_active": user.is_active,
             "tenant_id": user.tenant_id or 1  # Default to 1 if null
-        }
+        },
+        "tenant_info": {
+            "id": tenant.id if tenant else user.tenant_id,
+            "code": tenant.code if tenant else None,
+            "name": tenant.name if tenant else None,
+        },
     }
 
 

@@ -1,7 +1,7 @@
 """
 Restaurant Achievements API endpoints.
 
-Handles restaurant achievements with multi-language support.
+Handles Restaurant Achievements with multi-language support.
 """
 from typing import Optional, List
 from datetime import date
@@ -20,6 +20,7 @@ from app.models.restaurant import (
     CafeAchievementMedia,
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -364,18 +365,12 @@ def delete_achievement(
     if not achievement or achievement.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Achievement not found")
 
-    achievement_title = achievement.code
+    delete_related_rows(db, CafeAchievementTranslation, CafeAchievementTranslation.achievement_id == achievement_id)
+    delete_related_rows(db, CafeAchievementMedia, CafeAchievementMedia.achievement_id == achievement_id)
+
+    db.flush()
     db.delete(achievement)
     db.commit()
 
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_POST,
-        f'Achievement "{achievement_title}" deleted',
-        resource_type="restaurant_achievement",
-        resource_id=achievement_id,
-        extra_details={"title": achievement_title, "code": achievement.code},
-    )
-
     return {"success": True, "message": "Achievement deleted"}
+

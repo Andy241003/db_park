@@ -52,20 +52,20 @@ class PromotionType(str, Enum):
 
 
 # ==========================================
-# Restaurant Settings
+# Park Settings
 # ==========================================
 
-class CafeSettings(SQLModel, table=True):
+class ParkSettings(SQLModel, table=True):
     """
-    Restaurant general settings - branding, contact, business hours
+    Park general settings - branding, contact, business hours
     """
-    __tablename__ = "restaurant_settings"
+    __tablename__ = "park_settings"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
     
     # Branding
-    restaurant_name: str
+    park_name: str
     slogan: Optional[str] = None
     primary_color: str = "#6f4e37"  # Coffee brown
     secondary_color: str = "#d4a574"  # Light coffee
@@ -75,7 +75,7 @@ class CafeSettings(SQLModel, table=True):
     phone: Optional[str] = None
     email: Optional[str] = None
     website: Optional[str] = None
-    phone_number: Optional[str] = None  # Alternative phone/Zalo
+    support_phone: Optional[str] = None  # Alternative phone/Zalo
     
     # Booking & Messaging
     booking_url: Optional[str] = None
@@ -99,7 +99,7 @@ class CafeSettings(SQLModel, table=True):
     meta_keywords: Optional[str] = None
     
     # Business hours and additional settings
-    business_hours: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+    operating_hours: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     settings_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     
     # Timestamps
@@ -107,11 +107,11 @@ class CafeSettings(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
-class CafePageSettings(SQLModel, table=True):
+class ParkPageSettings(SQLModel, table=True):
     """
     Per-page settings (VR360 links, display control)
     """
-    __tablename__ = "restaurant_page_settings"
+    __tablename__ = "park_page_settings"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -127,14 +127,14 @@ class CafePageSettings(SQLModel, table=True):
 
 
 # ==========================================
-# Restaurant Branches
+# Park Locations
 # ==========================================
 
-class CafeBranch(SQLModel, table=True):
+class ParkLocation(SQLModel, table=True):
     """
-    Restaurant branches/locations
+    Park locations/branches
     """
-    __tablename__ = "restaurant_branches"
+    __tablename__ = "park_locations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -168,18 +168,18 @@ class CafeBranch(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeBranchTranslation"] = Relationship(back_populates="branch")
-    media: List["CafeBranchMedia"] = Relationship(back_populates="branch")
+    translations: List["ParkLocationTranslation"] = Relationship(back_populates="location")
+    media: List["ParkLocationMedia"] = Relationship(back_populates="location")
 
 
-class CafeBranchTranslation(SQLModel, table=True):
+class ParkLocationTranslation(SQLModel, table=True):
     """
-    Branch translations
+    Location translations
     """
-    __tablename__ = "restaurant_branch_translations"
+    __tablename__ = "park_location_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    branch_id: int = Field(foreign_key="restaurant_branches.id", index=True)
+    location_id: int = Field(foreign_key="park_locations.id", index=True)
     locale: str = Field(index=True)
     
     name: str
@@ -189,17 +189,17 @@ class CafeBranchTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    branch: Optional[CafeBranch] = Relationship(back_populates="translations")
+    location: Optional[ParkLocation] = Relationship(back_populates="translations")
 
 
-class CafeBranchMedia(SQLModel, table=True):
+class ParkLocationMedia(SQLModel, table=True):
     """
-    Branch media (photos)
+    Location media (photos)
     """
-    __tablename__ = "restaurant_branch_media"
+    __tablename__ = "park_location_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    branch_id: int = Field(foreign_key="restaurant_branches.id", index=True)
+    location_id: int = Field(foreign_key="park_locations.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
@@ -207,18 +207,18 @@ class CafeBranchMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    branch: Optional[CafeBranch] = Relationship(back_populates="media")
+    location: Optional[ParkLocation] = Relationship(back_populates="media")
 
 
 # ==========================================
 # Restaurant Menu
 # ==========================================
 
-class CafeMenuCategory(SQLModel, table=True):
+class ParkMenuCategory(SQLModel, table=True):
     """
     Menu categories (e.g., Coffee, Tea, Desserts)
     """
-    __tablename__ = "restaurant_menu_categories"
+    __tablename__ = "park_menu_categories"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -230,17 +230,17 @@ class CafeMenuCategory(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeMenuCategoryTranslation"] = Relationship(back_populates="category")
+    translations: List["ParkMenuCategoryTranslation"] = Relationship(back_populates="category")
 
 
-class CafeMenuCategoryTranslation(SQLModel, table=True):
+class ParkMenuCategoryTranslation(SQLModel, table=True):
     """
     Menu category translations
     """
-    __tablename__ = "restaurant_menu_category_translations"
+    __tablename__ = "park_menu_category_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    category_id: int = Field(foreign_key="restaurant_menu_categories.id", index=True)
+    category_id: int = Field(foreign_key="park_menu_categories.id", index=True)
     locale: str = Field(index=True)
     
     name: str
@@ -248,18 +248,18 @@ class CafeMenuCategoryTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    category: Optional[CafeMenuCategory] = Relationship(back_populates="translations")
+    category: Optional[ParkMenuCategory] = Relationship(back_populates="translations")
 
 
-class CafeMenuItem(SQLModel, table=True):
+class ParkMenuItem(SQLModel, table=True):
     """
     Menu items (dishes, drinks)
     """
-    __tablename__ = "restaurant_menu_items"
+    __tablename__ = "park_menu_items"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
-    category_id: int = Field(foreign_key="restaurant_menu_categories.id", index=True)
+    category_id: int = Field(foreign_key="park_menu_categories.id", index=True)
     code: str = Field(unique=True, index=True)
     
     # Pricing
@@ -292,18 +292,18 @@ class CafeMenuItem(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeMenuItemTranslation"] = Relationship(back_populates="item")
-    media: List["CafeMenuItemMedia"] = Relationship(back_populates="item")
+    translations: List["ParkMenuItemTranslation"] = Relationship(back_populates="item")
+    media: List["ParkMenuItemMedia"] = Relationship(back_populates="item")
 
 
-class CafeMenuItemTranslation(SQLModel, table=True):
+class ParkMenuItemTranslation(SQLModel, table=True):
     """
     Menu item translations
     """
-    __tablename__ = "restaurant_menu_item_translations"
+    __tablename__ = "park_menu_item_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    item_id: int = Field(foreign_key="restaurant_menu_items.id", index=True)
+    item_id: int = Field(foreign_key="park_menu_items.id", index=True)
     locale: str = Field(index=True)
     
     name: str
@@ -312,17 +312,17 @@ class CafeMenuItemTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    item: Optional[CafeMenuItem] = Relationship(back_populates="translations")
+    item: Optional[ParkMenuItem] = Relationship(back_populates="translations")
 
 
-class CafeMenuItemMedia(SQLModel, table=True):
+class ParkMenuItemMedia(SQLModel, table=True):
     """
     Menu item media (photos)
     """
-    __tablename__ = "restaurant_menu_item_media"
+    __tablename__ = "park_menu_item_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    item_id: int = Field(foreign_key="restaurant_menu_items.id", index=True)
+    item_id: int = Field(foreign_key="park_menu_items.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
@@ -330,18 +330,18 @@ class CafeMenuItemMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    item: Optional[CafeMenuItem] = Relationship(back_populates="media")
+    item: Optional[ParkMenuItem] = Relationship(back_populates="media")
 
 
 # ==========================================
-# Restaurant Events
+# Park Events
 # ==========================================
 
-class CafeEvent(SQLModel, table=True):
+class ParkEvent(SQLModel, table=True):
     """
-    Restaurant events (workshops, tastings, music nights)
+    Park events (shows, activities, special events)
     """
-    __tablename__ = "restaurant_events"
+    __tablename__ = "park_events"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -354,7 +354,8 @@ class CafeEvent(SQLModel, table=True):
     end_time: Optional[str] = None
     
     # Location
-    branch_id: Optional[int] = Field(default=None, foreign_key="restaurant_branches.id")
+    location_id: Optional[int] = Field(default=None, foreign_key="park_locations.id")
+    space_id: Optional[int] = Field(default=None, foreign_key="park_spaces.id")
     location_text: Optional[str] = None
     
     # Registration
@@ -374,18 +375,18 @@ class CafeEvent(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeEventTranslation"] = Relationship(back_populates="event")
-    media: List["CafeEventMedia"] = Relationship(back_populates="event")
+    translations: List["ParkEventTranslation"] = Relationship(back_populates="event")
+    media: List["ParkEventMedia"] = Relationship(back_populates="event")
 
 
-class CafeEventTranslation(SQLModel, table=True):
+class ParkEventTranslation(SQLModel, table=True):
     """
     Event translations
     """
-    __tablename__ = "restaurant_event_translations"
+    __tablename__ = "park_event_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    event_id: int = Field(foreign_key="restaurant_events.id", index=True)
+    event_id: int = Field(foreign_key="park_events.id", index=True)
     locale: str = Field(index=True)
     
     title: str
@@ -394,17 +395,17 @@ class CafeEventTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    event: Optional[CafeEvent] = Relationship(back_populates="translations")
+    event: Optional[ParkEvent] = Relationship(back_populates="translations")
 
 
-class CafeEventMedia(SQLModel, table=True):
+class ParkEventMedia(SQLModel, table=True):
     """
     Event media (photos)
     """
-    __tablename__ = "restaurant_event_media"
+    __tablename__ = "park_event_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    event_id: int = Field(foreign_key="restaurant_events.id", index=True)
+    event_id: int = Field(foreign_key="park_events.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
@@ -412,18 +413,18 @@ class CafeEventMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    event: Optional[CafeEvent] = Relationship(back_populates="media")
+    event: Optional[ParkEvent] = Relationship(back_populates="media")
 
 
 # ==========================================
 # Restaurant Careers
 # ==========================================
 
-class CafeCareer(SQLModel, table=True):
+class ParkCareer(SQLModel, table=True):
     """
     Career/job postings
     """
-    __tablename__ = "restaurant_careers"
+    __tablename__ = "park_careers"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -445,7 +446,7 @@ class CafeCareer(SQLModel, table=True):
     application_url: Optional[str] = None
     
     # Location
-    branch_id: Optional[int] = Field(default=None, foreign_key="restaurant_branches.id")
+    location_id: Optional[int] = Field(default=None, foreign_key="park_locations.id")
     
     # Media
     primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
@@ -460,18 +461,18 @@ class CafeCareer(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeCareerTranslation"] = Relationship(back_populates="career")
-    media: List["CafeCareerMedia"] = Relationship(back_populates="career")
+    translations: List["ParkCareerTranslation"] = Relationship(back_populates="career")
+    media: List["ParkCareerMedia"] = Relationship(back_populates="career")
 
 
-class CafeCareerTranslation(SQLModel, table=True):
+class ParkCareerTranslation(SQLModel, table=True):
     """
     Career posting translations
     """
-    __tablename__ = "restaurant_career_translations"
+    __tablename__ = "park_career_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    career_id: int = Field(foreign_key="restaurant_careers.id", index=True)
+    career_id: int = Field(foreign_key="park_careers.id", index=True)
     locale: str = Field(index=True)
     
     title: str
@@ -481,36 +482,36 @@ class CafeCareerTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    career: Optional[CafeCareer] = Relationship(back_populates="translations")
+    career: Optional[ParkCareer] = Relationship(back_populates="translations")
 
 
-class CafeCareerMedia(SQLModel, table=True):
+class ParkCareerMedia(SQLModel, table=True):
     """
     Career media (photos)
     """
-    __tablename__ = "restaurant_career_media"
+    __tablename__ = "park_career_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    career_id: int = Field(foreign_key="restaurant_careers.id", index=True)
+    career_id: int = Field(foreign_key="park_careers.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
     sort_order: int = 0
-    
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    career: Optional[CafeCareer] = Relationship(back_populates="media")
+    career: Optional[ParkCareer] = Relationship(back_populates="media")
 
 
 # ==========================================
 # Restaurant Promotions
 # ==========================================
 
-class CafePromotion(SQLModel, table=True):
+class ParkPromotion(SQLModel, table=True):
     """
     Promotions and special offers
     """
-    __tablename__ = "restaurant_promotions"
+    __tablename__ = "park_promotions"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -518,23 +519,23 @@ class CafePromotion(SQLModel, table=True):
     
     # Discount
     promotion_type: str = "percentage"  # PromotionType enum
+    discount_type: Optional[str] = None
     discount_value: Optional[float] = None
     
     # Validity
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    valid_from: Optional[date] = None
+    valid_to: Optional[date] = None
     
-    # Applicability
-    applicable_menu_items: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    applicable_categories: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    applicable_branches: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    min_purchase_amount: Optional[float] = None
+    min_order_value: Optional[float] = None
+    max_discount: Optional[float] = None
+    usage_limit: Optional[int] = None
+    usage_count: int = 0
     
     # Media
     primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
     
     # Status
-    is_active: bool = True
+    status: str = "active"
     is_featured: bool = False
     display_order: int = 0
     
@@ -543,18 +544,18 @@ class CafePromotion(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafePromotionTranslation"] = Relationship(back_populates="promotion")
-    media: List["CafePromotionMedia"] = Relationship(back_populates="promotion")
+    translations: List["ParkPromotionTranslation"] = Relationship(back_populates="promotion")
+    media: List["ParkPromotionMedia"] = Relationship(back_populates="promotion")
 
 
-class CafePromotionTranslation(SQLModel, table=True):
+class ParkPromotionTranslation(SQLModel, table=True):
     """
     Promotion translations
     """
-    __tablename__ = "restaurant_promotion_translations"
+    __tablename__ = "park_promotion_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    promotion_id: int = Field(foreign_key="restaurant_promotions.id", index=True)
+    promotion_id: int = Field(foreign_key="park_promotions.id", index=True)
     locale: str = Field(index=True)
     
     title: str
@@ -563,17 +564,17 @@ class CafePromotionTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    promotion: Optional[CafePromotion] = Relationship(back_populates="translations")
+    promotion: Optional[ParkPromotion] = Relationship(back_populates="translations")
 
 
-class CafePromotionMedia(SQLModel, table=True):
+class ParkPromotionMedia(SQLModel, table=True):
     """
     Promotion media (photos)
     """
-    __tablename__ = "restaurant_promotion_media"
+    __tablename__ = "park_promotion_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    promotion_id: int = Field(foreign_key="restaurant_promotions.id", index=True)
+    promotion_id: int = Field(foreign_key="park_promotions.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
@@ -581,18 +582,18 @@ class CafePromotionMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    promotion: Optional[CafePromotion] = Relationship(back_populates="media")
+    promotion: Optional[ParkPromotion] = Relationship(back_populates="media")
 
 
 # ==========================================
 # Restaurant Achievements
 # ==========================================
 
-class CafeAchievement(SQLModel, table=True):
+class ParkAchievement(SQLModel, table=True):
     """
     Restaurant achievements (awards, certifications, milestones)
     """
-    __tablename__ = "restaurant_achievements"
+    __tablename__ = "park_achievements"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -615,18 +616,18 @@ class CafeAchievement(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeAchievementTranslation"] = Relationship(back_populates="achievement")
-    media: List["CafeAchievementMedia"] = Relationship(back_populates="achievement")
+    translations: List["ParkAchievementTranslation"] = Relationship(back_populates="achievement")
+    media: List["ParkAchievementMedia"] = Relationship(back_populates="achievement")
 
 
-class CafeAchievementTranslation(SQLModel, table=True):
+class ParkAchievementTranslation(SQLModel, table=True):
     """
     Achievement translations
     """
-    __tablename__ = "restaurant_achievement_translations"
+    __tablename__ = "park_achievement_translations"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    achievement_id: int = Field(foreign_key="restaurant_achievements.id", index=True)
+    achievement_id: int = Field(foreign_key="park_achievements.id", index=True)
     locale: str = Field(index=True)
 
     title: str
@@ -634,17 +635,17 @@ class CafeAchievementTranslation(SQLModel, table=True):
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    achievement: Optional[CafeAchievement] = Relationship(back_populates="translations")
+    achievement: Optional[ParkAchievement] = Relationship(back_populates="translations")
 
 
-class CafeAchievementMedia(SQLModel, table=True):
+class ParkAchievementMedia(SQLModel, table=True):
     """
     Achievement media (photos/certificates)
     """
-    __tablename__ = "restaurant_achievement_media"
+    __tablename__ = "park_achievement_media"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    achievement_id: int = Field(foreign_key="restaurant_achievements.id", index=True)
+    achievement_id: int = Field(foreign_key="park_achievements.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
 
     is_primary: bool = False
@@ -652,18 +653,18 @@ class CafeAchievementMedia(SQLModel, table=True):
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    achievement: Optional[CafeAchievement] = Relationship(back_populates="media")
+    achievement: Optional[ParkAchievement] = Relationship(back_populates="media")
 
 
 # ==========================================
-# Restaurant Spaces
+# Park Spaces
 # ==========================================
 
-class CafeSpace(SQLModel, table=True):
+class ParkSpace(SQLModel, table=True):
     """
-    Restaurant spaces / areas
+    Park spaces / areas
     """
-    __tablename__ = "restaurant_spaces"
+    __tablename__ = "park_spaces"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -681,18 +682,18 @@ class CafeSpace(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeSpaceTranslation"] = Relationship(back_populates="space")
-    media: List["CafeSpaceMedia"] = Relationship(back_populates="space")
+    translations: List["ParkSpaceTranslation"] = Relationship(back_populates="space")
+    media: List["ParkSpaceMedia"] = Relationship(back_populates="space")
 
 
-class CafeSpaceTranslation(SQLModel, table=True):
+class ParkSpaceTranslation(SQLModel, table=True):
     """
     Space translations
     """
-    __tablename__ = "restaurant_space_translations"
+    __tablename__ = "park_space_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    space_id: int = Field(foreign_key="restaurant_spaces.id", index=True)
+    space_id: int = Field(foreign_key="park_spaces.id", index=True)
     locale: str = Field(index=True)
     
     name: str
@@ -700,17 +701,17 @@ class CafeSpaceTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    space: Optional[CafeSpace] = Relationship(back_populates="translations")
+    space: Optional[ParkSpace] = Relationship(back_populates="translations")
 
 
-class CafeSpaceMedia(SQLModel, table=True):
+class ParkSpaceMedia(SQLModel, table=True):
     """
     Space media (photos)
     """
-    __tablename__ = "restaurant_space_media"
+    __tablename__ = "park_space_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    space_id: int = Field(foreign_key="restaurant_spaces.id", index=True)
+    space_id: int = Field(foreign_key="park_spaces.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     is_primary: bool = False
@@ -718,18 +719,18 @@ class CafeSpaceMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    space: Optional[CafeSpace] = Relationship(back_populates="media")
+    space: Optional[ParkSpace] = Relationship(back_populates="media")
 
 
 # ==========================================
-# Restaurant Services
+# Park Services
 # ==========================================
 
-class CafeService(SQLModel, table=True):
+class ParkService(SQLModel, table=True):
     """
-    Restaurant services (spa, concierge, etc.)
+    Park services (ticket booking, tours, facilities, etc.)
     """
-    __tablename__ = "restaurant_services"
+    __tablename__ = "park_services"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -754,18 +755,18 @@ class CafeService(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeServiceTranslation"] = Relationship(back_populates="service")
-    media: List["CafeServiceMedia"] = Relationship(back_populates="service")
+    translations: List["ParkServiceTranslation"] = Relationship(back_populates="service")
+    media: List["ParkServiceMedia"] = Relationship(back_populates="service")
 
 
-class CafeServiceTranslation(SQLModel, table=True):
+class ParkServiceTranslation(SQLModel, table=True):
     """
     Service translations
     """
-    __tablename__ = "restaurant_service_translations"
+    __tablename__ = "park_service_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    service_id: int = Field(foreign_key="restaurant_services.id", index=True)
+    service_id: int = Field(foreign_key="park_services.id", index=True)
     locale: str = Field(index=True)
     
     name: str  # Service name
@@ -773,17 +774,17 @@ class CafeServiceTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    service: Optional[CafeService] = Relationship(back_populates="translations")
+    service: Optional[ParkService] = Relationship(back_populates="translations")
 
 
-class CafeServiceMedia(SQLModel, table=True):
+class ParkServiceMedia(SQLModel, table=True):
     """
     Service media (photos/gallery)
     """
-    __tablename__ = "restaurant_service_media"
+    __tablename__ = "park_service_media"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    service_id: int = Field(foreign_key="restaurant_services.id", index=True)
+    service_id: int = Field(foreign_key="park_services.id", index=True)
     media_id: int = Field(foreign_key="media_files.id", index=True)
     
     sort_order: int = 0
@@ -791,18 +792,229 @@ class CafeServiceMedia(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    service: Optional[CafeService] = Relationship(back_populates="media")
+    service: Optional[ParkService] = Relationship(back_populates="media")
+
+
+# ==========================================
+# Park Attractions
+# ==========================================
+
+class ParkAttraction(SQLModel, table=True):
+    """
+    Park attractions, rides, shows, and points of interest
+    """
+    __tablename__ = "park_attractions"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+    space_id: Optional[int] = Field(default=None, foreign_key="park_spaces.id", index=True)
+    category_id: Optional[int] = Field(default=None, foreign_key="park_attraction_categories.id", index=True)
+    code: str = Field(index=True)
+
+    attraction_type: str = Field(index=True)  # ride, show, poi, game, service_point, zone
+    experience_type: Optional[str] = Field(default=None, index=True)  # thrill, family, kids, water, indoor
+    thrill_level: Optional[str] = None  # low, medium, high, extreme
+
+    min_height_cm: Optional[int] = None
+    max_height_cm: Optional[int] = None
+    min_age: Optional[int] = None
+    max_age: Optional[int] = None
+    duration_minutes: Optional[int] = None
+
+    operating_hours: Optional[str] = None
+    queue_notes: Optional[str] = None
+
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    map_x: Optional[float] = None
+    map_y: Optional[float] = None
+    vr360_link: Optional[str] = None
+
+    primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
+
+    is_active: bool = True
+    is_featured: bool = False
+    display_order: int = 0
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    translations: List["ParkAttractionTranslation"] = Relationship(back_populates="attraction")
+    media: List["ParkAttractionMedia"] = Relationship(back_populates="attraction")
+    category: Optional["ParkAttractionCategory"] = Relationship(back_populates="attractions")
+
+
+class ParkAttractionCategory(SQLModel, table=True):
+    """
+    Point of interest categories for park attractions.
+    """
+    __tablename__ = "park_attraction_categories"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+    code: str = Field(index=True)
+    is_active: bool = True
+    display_order: int = 0
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    attractions: List["ParkAttraction"] = Relationship(back_populates="category")
+    translations: List["ParkAttractionCategoryTranslation"] = Relationship(back_populates="category")
+
+
+class ParkAttractionCategoryTranslation(SQLModel, table=True):
+    """
+    Point of interest category translations.
+    """
+    __tablename__ = "park_attraction_category_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    category_id: int = Field(foreign_key="park_attraction_categories.id", index=True)
+    locale: str = Field(index=True)
+
+    title: str
+    description: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    category: Optional[ParkAttractionCategory] = Relationship(back_populates="translations")
+
+
+class ParkAttractionTranslation(SQLModel, table=True):
+    """
+    Attraction translations
+    """
+    __tablename__ = "park_attraction_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    attraction_id: int = Field(foreign_key="park_attractions.id", index=True)
+    locale: str = Field(index=True)
+
+    name: str
+    short_description: Optional[str] = None
+    description: Optional[str] = None
+    safety_notes: Optional[str] = None
+    experience_notes: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    attraction: Optional[ParkAttraction] = Relationship(back_populates="translations")
+
+
+class ParkAttractionMedia(SQLModel, table=True):
+    """
+    Attraction media (photos, posters, previews)
+    """
+    __tablename__ = "park_attraction_media"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    attraction_id: int = Field(foreign_key="park_attractions.id", index=True)
+    media_id: int = Field(foreign_key="media_files.id", index=True)
+
+    is_primary: bool = False
+    sort_order: int = 0
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    attraction: Optional[ParkAttraction] = Relationship(back_populates="media")
+
+
+# ==========================================
+# Park Ticket Types
+# ==========================================
+
+class ParkTicketType(SQLModel, table=True):
+    """
+    Ticket types, passes, combos, and admission products
+    """
+    __tablename__ = "park_ticket_types"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+    code: str = Field(index=True)
+
+    ticket_type: str = Field(index=True)  # admission, combo, fast_pass, add_on, membership
+    audience_type: Optional[str] = Field(default=None, index=True)  # adult, child, family, group, senior
+    validity_type: Optional[str] = Field(default=None, index=True)  # single_day, date_range, time_slot, open_date
+
+    base_price: Optional[float] = None
+    sale_price: Optional[float] = None
+    currency_code: str = "VND"
+
+    valid_from: Optional[date] = None
+    valid_to: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+
+    min_height_cm: Optional[int] = None
+    max_height_cm: Optional[int] = None
+    min_age: Optional[int] = None
+    max_age: Optional[int] = None
+    max_visits: Optional[int] = None
+
+    primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
+
+    is_active: bool = True
+    is_featured: bool = False
+    display_order: int = 0
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    translations: List["ParkTicketTypeTranslation"] = Relationship(back_populates="ticket_type_ref")
+    media: List["ParkTicketTypeMedia"] = Relationship(back_populates="ticket_type_ref")
+
+
+class ParkTicketTypeTranslation(SQLModel, table=True):
+    """
+    Ticket type translations
+    """
+    __tablename__ = "park_ticket_type_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    ticket_type_id: int = Field(foreign_key="park_ticket_types.id", index=True)
+    locale: str = Field(index=True)
+
+    name: str
+    description: Optional[str] = None
+    terms_and_conditions: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    ticket_type_ref: Optional[ParkTicketType] = Relationship(back_populates="translations")
+
+
+class ParkTicketTypeMedia(SQLModel, table=True):
+    """
+    Ticket type media (banners, cards, visuals)
+    """
+    __tablename__ = "park_ticket_type_media"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    ticket_type_id: int = Field(foreign_key="park_ticket_types.id", index=True)
+    media_id: int = Field(foreign_key="media_files.id", index=True)
+
+    is_primary: bool = False
+    sort_order: int = 0
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    ticket_type_ref: Optional[ParkTicketType] = Relationship(back_populates="media")
 
 
 # ==========================================
 # Restaurant Content Sections (Home/About)
 # ==========================================
 
-class CafeContentSection(SQLModel, table=True):
+class ParkContentSection(SQLModel, table=True):
     """
     Content sections for Home/About pages (features, values, etc.)
     """
-    __tablename__ = "restaurant_content_sections"
+    __tablename__ = "park_content_sections"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     tenant_id: int = Field(foreign_key="tenants.id", index=True)
@@ -819,17 +1031,17 @@ class CafeContentSection(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    translations: List["CafeContentSectionTranslation"] = Relationship(back_populates="section")
+    translations: List["ParkContentSectionTranslation"] = Relationship(back_populates="section")
 
 
-class CafeContentSectionTranslation(SQLModel, table=True):
+class ParkContentSectionTranslation(SQLModel, table=True):
     """
     Content section translations
     """
-    __tablename__ = "restaurant_content_section_translations"
+    __tablename__ = "park_content_section_translations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    section_id: int = Field(foreign_key="restaurant_content_sections.id", index=True)
+    section_id: int = Field(foreign_key="park_content_sections.id", index=True)
     locale: str = Field(index=True)
     
     title: str
@@ -838,40 +1050,178 @@ class CafeContentSectionTranslation(SQLModel, table=True):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    section: Optional[CafeContentSection] = Relationship(back_populates="translations")
+    section: Optional[ParkContentSection] = Relationship(back_populates="translations")
+
+
+# ==========================================
+# Visitor Information
+# ==========================================
+
+class ParkVisitorInfoCategory(SQLModel, table=True):
+    """
+    Visitor information categories such as opening hours, rules, directions, and FAQ.
+    """
+    __tablename__ = "park_visitor_info_categories"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+    page_code: str = Field(default="visitor_info", index=True)
+    category_code: str = Field(index=True)  # opening_hours, rules, directions, faq
+    title: str
+    icon: Optional[str] = None
+    item_layout: Optional[str] = None  # list, schedule, faq, transport
+
+    is_active: bool = True
+    display_order: int = 0
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    items: List["ParkVisitorInfoItem"] = Relationship(back_populates="category")
+    translations: List["ParkVisitorInfoCategoryTranslation"] = Relationship(back_populates="category")
+
+
+class ParkVisitorInfoCategoryTranslation(SQLModel, table=True):
+    """
+    Visitor information category translations.
+    """
+    __tablename__ = "park_visitor_info_category_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    category_id: int = Field(foreign_key="park_visitor_info_categories.id", index=True)
+    locale: str = Field(index=True)
+
+    title: str
+    description: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    category: Optional[ParkVisitorInfoCategory] = Relationship(back_populates="translations")
+
+
+class ParkVisitorInfoItem(SQLModel, table=True):
+    """
+    Individual visitor information items within a category.
+    """
+    __tablename__ = "park_visitor_info_items"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    category_id: int = Field(foreign_key="park_visitor_info_categories.id", index=True)
+    item_type: str = Field(default="text", index=True)  # schedule, rule, direction, faq
+
+    is_active: bool = True
+    display_order: int = 0
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    category: Optional[ParkVisitorInfoCategory] = Relationship(back_populates="items")
+    translations: List["ParkVisitorInfoItemTranslation"] = Relationship(back_populates="item")
+
+
+class ParkVisitorInfoItemTranslation(SQLModel, table=True):
+    """
+    Visitor information item translations.
+    """
+    __tablename__ = "park_visitor_info_item_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    item_id: int = Field(foreign_key="park_visitor_info_items.id", index=True)
+    locale: str = Field(index=True)
+
+    title: str
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+    content: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    item: Optional[ParkVisitorInfoItem] = Relationship(back_populates="translations")
 
 
 # Backward-compatible aliases while the codebase finishes migrating to restaurant naming.
-RestaurantSettings = CafeSettings
-RestaurantPageSettings = CafePageSettings
-RestaurantBranch = CafeBranch
-RestaurantBranchTranslation = CafeBranchTranslation
-RestaurantBranchMedia = CafeBranchMedia
-RestaurantMenuCategory = CafeMenuCategory
-RestaurantMenuCategoryTranslation = CafeMenuCategoryTranslation
-RestaurantMenuItem = CafeMenuItem
-RestaurantMenuItemTranslation = CafeMenuItemTranslation
-RestaurantMenuItemMedia = CafeMenuItemMedia
-RestaurantEvent = CafeEvent
-RestaurantEventTranslation = CafeEventTranslation
-RestaurantEventMedia = CafeEventMedia
-RestaurantCareer = CafeCareer
-RestaurantCareerTranslation = CafeCareerTranslation
-RestaurantCareerMedia = CafeCareerMedia
-RestaurantPromotion = CafePromotion
-RestaurantPromotionTranslation = CafePromotionTranslation
-RestaurantPromotionMedia = CafePromotionMedia
-RestaurantAchievement = CafeAchievement
-RestaurantAchievementTranslation = CafeAchievementTranslation
-RestaurantAchievementMedia = CafeAchievementMedia
-RestaurantSpace = CafeSpace
-RestaurantSpaceTranslation = CafeSpaceTranslation
-RestaurantSpaceMedia = CafeSpaceMedia
-RestaurantService = CafeService
-RestaurantServiceTranslation = CafeServiceTranslation
-RestaurantServiceMedia = CafeServiceMedia
-RestaurantContentSection = CafeContentSection
-RestaurantContentSectionTranslation = CafeContentSectionTranslation
+CafeSettings = ParkSettings
+CafePageSettings = ParkPageSettings
+CafeBranch = ParkLocation
+CafeBranchTranslation = ParkLocationTranslation
+CafeBranchMedia = ParkLocationMedia
+CafeMenuCategory = ParkMenuCategory
+CafeMenuCategoryTranslation = ParkMenuCategoryTranslation
+CafeMenuItem = ParkMenuItem
+CafeMenuItemTranslation = ParkMenuItemTranslation
+CafeMenuItemMedia = ParkMenuItemMedia
+CafeEvent = ParkEvent
+CafeEventTranslation = ParkEventTranslation
+CafeEventMedia = ParkEventMedia
+CafeCareer = ParkCareer
+CafeCareerTranslation = ParkCareerTranslation
+CafeCareerMedia = ParkCareerMedia
+CafePromotion = ParkPromotion
+CafePromotionTranslation = ParkPromotionTranslation
+CafePromotionMedia = ParkPromotionMedia
+CafeAchievement = ParkAchievement
+CafeAchievementTranslation = ParkAchievementTranslation
+CafeAchievementMedia = ParkAchievementMedia
+CafeSpace = ParkSpace
+CafeSpaceTranslation = ParkSpaceTranslation
+CafeSpaceMedia = ParkSpaceMedia
+CafeService = ParkService
+CafeServiceTranslation = ParkServiceTranslation
+CafeServiceMedia = ParkServiceMedia
+CafeAttraction = ParkAttraction
+CafeAttractionTranslation = ParkAttractionTranslation
+CafeAttractionMedia = ParkAttractionMedia
+CafeTicketType = ParkTicketType
+CafeTicketTypeTranslation = ParkTicketTypeTranslation
+CafeTicketTypeMedia = ParkTicketTypeMedia
+CafeContentSection = ParkContentSection
+CafeContentSectionTranslation = ParkContentSectionTranslation
+RestaurantSettings = ParkSettings
+RestaurantPageSettings = ParkPageSettings
+RestaurantBranch = ParkLocation
+RestaurantBranchTranslation = ParkLocationTranslation
+RestaurantBranchMedia = ParkLocationMedia
+RestaurantMenuCategory = ParkMenuCategory
+RestaurantMenuCategoryTranslation = ParkMenuCategoryTranslation
+RestaurantMenuItem = ParkMenuItem
+RestaurantMenuItemTranslation = ParkMenuItemTranslation
+RestaurantMenuItemMedia = ParkMenuItemMedia
+RestaurantEvent = ParkEvent
+RestaurantEventTranslation = ParkEventTranslation
+RestaurantEventMedia = ParkEventMedia
+RestaurantCareer = ParkCareer
+RestaurantCareerTranslation = ParkCareerTranslation
+RestaurantCareerMedia = ParkCareerMedia
+RestaurantPromotion = ParkPromotion
+RestaurantPromotionTranslation = ParkPromotionTranslation
+RestaurantPromotionMedia = ParkPromotionMedia
+RestaurantAchievement = ParkAchievement
+RestaurantAchievementTranslation = ParkAchievementTranslation
+RestaurantAchievementMedia = ParkAchievementMedia
+RestaurantSpace = ParkSpace
+RestaurantSpaceTranslation = ParkSpaceTranslation
+RestaurantSpaceMedia = ParkSpaceMedia
+RestaurantService = ParkService
+RestaurantServiceTranslation = ParkServiceTranslation
+RestaurantServiceMedia = ParkServiceMedia
+RestaurantAttraction = ParkAttraction
+RestaurantAttractionTranslation = ParkAttractionTranslation
+RestaurantAttractionMedia = ParkAttractionMedia
+RestaurantTicketType = ParkTicketType
+RestaurantTicketTypeTranslation = ParkTicketTypeTranslation
+RestaurantTicketTypeMedia = ParkTicketTypeMedia
+RestaurantContentSection = ParkContentSection
+RestaurantContentSectionTranslation = ParkContentSectionTranslation
+CafeVisitorInfoCategory = ParkVisitorInfoCategory
+CafeVisitorInfoCategoryTranslation = ParkVisitorInfoCategoryTranslation
+CafeVisitorInfoItem = ParkVisitorInfoItem
+CafeVisitorInfoItemTranslation = ParkVisitorInfoItemTranslation
+RestaurantVisitorInfoCategory = ParkVisitorInfoCategory
+RestaurantVisitorInfoCategoryTranslation = ParkVisitorInfoCategoryTranslation
+RestaurantVisitorInfoItem = ParkVisitorInfoItem
+RestaurantVisitorInfoItemTranslation = ParkVisitorInfoItemTranslation
 
 
 

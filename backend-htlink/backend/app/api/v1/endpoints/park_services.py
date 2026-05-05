@@ -1,7 +1,7 @@
 """
 Restaurant Services API.
 
-Endpoints for managing restaurant/hotel services:
+Endpoints for managing Restaurant/hotel services:
 - Room service
 - Laundry
 - Concierge
@@ -27,6 +27,7 @@ from app.models.restaurant import (
 from app.api.deps import CurrentUser, SessionDep
 from app.models.activity_log import ActivityType
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -290,21 +291,9 @@ def delete_service(
     if not service or service.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Service not found")
     
-    # Delete related translations and media entries
-    for existing_translation in db.exec(
-        select(CafeServiceTranslation).where(
-            CafeServiceTranslation.service_id == service_id
-        )
-    ).all():
-        db.delete(existing_translation)
-    
-    for existing_media in db.exec(
-        select(CafeServiceMedia).where(
-            CafeServiceMedia.service_id == service_id
-        )
-    ).all():
-        db.delete(existing_media)
-    
+    delete_related_rows(db, CafeServiceTranslation, CafeServiceTranslation.service_id == service_id)
+    delete_related_rows(db, CafeServiceMedia, CafeServiceMedia.service_id == service_id)
+
     service_name = service.code
     db.delete(service)
     db.commit()
@@ -446,6 +435,7 @@ def get_service_media(
     ).all()
     
     return media_list
+
 
 
 

@@ -1,8 +1,28 @@
 version: "3.8"
 
 services:
-  # Database removed - using remote server at travel.link360.vn
-  # Connection: pymysql://vrcafe_user:cafe@1234@travel.link360.vn:3306/vrcafe_db
+  db:
+    image: mysql:8.0
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - restaurant-db-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - ../linkhotel_saas_schema_seed.sql:/seed/linkhotel_saas_schema_seed.sql:ro
+      - ./create_cafe_tables_fixed.sql:/seed/create_cafe_tables_fixed.sql:ro
+      - ./backend/migrations:/seed/backend-migrations:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   backend:
     build:
@@ -10,6 +30,13 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - MYSQL_SERVER=${MYSQL_SERVER}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     ports:
       - "8000:8000"
     volumes:
@@ -38,3 +65,6 @@ services:
     restart: always
     ports:
       - "8081:8080"
+
+volumes:
+  restaurant-db-data:

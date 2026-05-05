@@ -7,7 +7,7 @@ import axios from 'axios';
 import { getApiBaseUrl } from '../utils/api';
 
 const restaurantClient = axios.create({
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     Pragma: 'no-cache',
@@ -590,12 +590,12 @@ export interface LanguageCreate {
 
 export const cafeSettingsApi = {
   getSettings: async (): Promise<CafeSettings> => {
-    const response = await restaurantClient.get('/restaurant/settings/');
+    const response = await restaurantClient.get('/park/settings/');
     return response.data;
   },
 
   updateSettings: async (data: CafeSettingsUpdate): Promise<CafeSettings> => {
-    const response = await restaurantClient.post('/restaurant/settings/', data);
+    const response = await restaurantClient.post('/park/settings/', data);
     return response.data;
   },
 };
@@ -629,32 +629,32 @@ export interface CafeContactUpdate extends Partial<CafeContact> {}
 
 export const cafePageSettingsApi = {
   getPageSettings: async (): Promise<CafePageSettings[]> => {
-    const response = await restaurantClient.get('/restaurant/settings/pages');
+    const response = await restaurantClient.get('/park/settings/pages');
     return response.data;
   },
 
   getPageSetting: async (pageCode: string): Promise<CafePageSettings> => {
-    const response = await restaurantClient.get(`/restaurant/settings/pages/${pageCode}`);
+    const response = await restaurantClient.get(`/park/settings/pages/${pageCode}`);
     return response.data;
   },
 
   createOrUpdatePageSetting: async (data: CafePageSettingsUpdate): Promise<CafePageSettings> => {
-    const response = await restaurantClient.post('/restaurant/settings/pages', data);
+    const response = await restaurantClient.post('/park/settings/pages', data, { timeout: 60000 });
     return response.data;
   },
 
   deletePageSetting: async (pageCode: string): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/settings/pages/${pageCode}`);
+    await restaurantClient.delete(`/park/settings/pages/${pageCode}`);
   },
 };
 export const cafeContactApi = {
   getContact: async (): Promise<CafeContact> => {
-    const response = await restaurantClient.get('/restaurant/contact/');
+    const response = await restaurantClient.get('/park/contact/');
     return response.data;
   },
 
   updateContact: async (data: CafeContactUpdate): Promise<CafeContact> => {
-    const response = await restaurantClient.post('/restaurant/contact/', data);
+    const response = await restaurantClient.post('/park/contact/', data);
     return response.data;
   },
 };
@@ -668,7 +668,7 @@ export const cafeLanguagesApi = {
    * Get all supported languages for cafe
    */
   getLanguages: async (): Promise<CafeLanguage[]> => {
-    const response = await restaurantClient.get<CafeLanguage[]>('/restaurant/languages');
+    const response = await restaurantClient.get<CafeLanguage[]>('/park/languages');
     return response.data;
   },
 
@@ -676,7 +676,7 @@ export const cafeLanguagesApi = {
    * Add a new language
    */
   addLanguage: async (locale: string): Promise<CafeLanguage> => {
-    const response = await restaurantClient.post<CafeLanguage>('/restaurant/languages', { locale });
+    const response = await restaurantClient.post<CafeLanguage>('/park/languages', { locale });
     return response.data;
   },
 
@@ -684,14 +684,14 @@ export const cafeLanguagesApi = {
    * Remove a language
    */
   removeLanguage: async (locale: string): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/languages/${locale}`);
+    await restaurantClient.delete(`/park/languages/${locale}`);
   },
 
   /**
    * Set a language as default
    */
   setDefaultLanguage: async (locale: string): Promise<void> => {
-    await restaurantClient.put(`/restaurant/languages/${locale}/set-default`);
+    await restaurantClient.put(`/park/languages/${locale}/set-default`);
   },
 
   /**
@@ -710,57 +710,57 @@ export const cafeLanguagesApi = {
 export const cafeMenuApi = {
   // Categories
   getCategories: async (): Promise<MenuCategory[]> => {
-    const response = await restaurantClient.get('/restaurant/menu/categories');
+    const response = await restaurantClient.get('/park/menu/categories');
     return response.data;
   },
 
   createCategory: async (data: MenuCategoryCreate): Promise<MenuCategory> => {
-    const response = await restaurantClient.post('/restaurant/menu/categories', data);
+    const response = await restaurantClient.post('/park/menu/categories', data);
     return response.data;
   },
 
   updateCategory: async (id: number, data: MenuCategoryUpdate): Promise<MenuCategory> => {
-    const response = await restaurantClient.put(`/restaurant/menu/categories/${id}`, data);
+    const response = await restaurantClient.put(`/park/menu/categories/${id}`, data);
     return response.data;
   },
 
   deleteCategory: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/menu/categories/${id}`);
+    await restaurantClient.delete(`/park/menu/categories/${id}`);
   },
 
   // Menu Items
   getItems: async (): Promise<MenuItem[]> => {
-    const response = await restaurantClient.get('/restaurant/menu/items');
+    const response = await restaurantClient.get('/park/menu/items');
     return response.data;
   },
 
   getItem: async (id: number): Promise<MenuItem> => {
-    const response = await restaurantClient.get(`/restaurant/menu/items/${id}`);
+    const response = await restaurantClient.get(`/park/menu/items/${id}`);
     return response.data;
   },
 
   createItem: async (data: MenuItemCreate): Promise<MenuItem> => {
-    const response = await restaurantClient.post('/restaurant/menu/items', data);
+    const response = await restaurantClient.post('/park/menu/items', data);
     return response.data;
   },
 
   updateItem: async (id: number, data: MenuItemUpdate): Promise<MenuItem> => {
-    const response = await restaurantClient.put(`/restaurant/menu/items/${id}`, data);
+    const response = await restaurantClient.put(`/park/menu/items/${id}`, data);
     return response.data;
   },
 
   deleteItem: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/menu/items/${id}`);
+    await restaurantClient.delete(`/park/menu/items/${id}`);
   },
 
   // Translations
   updateCategoryTranslations: async (id: number, translations: CategoryTranslation[]): Promise<MenuCategory> => {
-    const response = await restaurantClient.put(`/restaurant/menu/categories/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/menu/categories/${id}`, { translations });
     return response.data;
   },
 
   updateItemTranslations: async (id: number, translations: ItemTranslation[]): Promise<MenuItem> => {
-    const response = await restaurantClient.put(`/restaurant/menu/items/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/menu/items/${id}`, { translations });
     return response.data;
   },
 };
@@ -771,39 +771,39 @@ export const cafeMenuApi = {
 
 export const cafeBranchesApi = {
   getBranches: async (): Promise<Branch[]> => {
-    const response = await restaurantClient.get('/restaurant/branches/');
+    const response = await restaurantClient.get('/park/branches/');
     return response.data;
   },
 
   getBranch: async (id: number): Promise<Branch> => {
-    const response = await restaurantClient.get(`/restaurant/branches/${id}`);
+    const response = await restaurantClient.get(`/park/branches/${id}`);
     return response.data;
   },
 
   createBranch: async (data: BranchCreate): Promise<Branch> => {
-    const response = await restaurantClient.post('/restaurant/branches/', data);
+    const response = await restaurantClient.post('/park/branches/', data);
     return response.data;
   },
 
   updateBranch: async (id: number, data: BranchUpdate): Promise<Branch> => {
-    const response = await restaurantClient.put(`/restaurant/branches/${id}`, data);
+    const response = await restaurantClient.put(`/park/branches/${id}`, data);
     return response.data;
   },
 
   deleteBranch: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/branches/${id}`);
+    await restaurantClient.delete(`/park/branches/${id}`);
   },
 
   reorderBranch: async (id: number, newOrder: number): Promise<void> => {
-    await restaurantClient.post(`/restaurant/branches/${id}/reorder?new_order=${newOrder}`);
+    await restaurantClient.post(`/park/branches/${id}/reorder?new_order=${newOrder}`);
   },
 
   reorderBranches: async (branchIds: number[]): Promise<void> => {
-    await restaurantClient.post('/restaurant/branches/reorder', { branch_ids: branchIds });
+    await restaurantClient.post('/park/branches/reorder', { branch_ids: branchIds });
   },
 
   updateBranchTranslations: async (id: number, translations: BranchTranslation[]): Promise<Branch> => {
-    const response = await restaurantClient.put(`/restaurant/branches/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/branches/${id}`, { translations });
     return response.data;
   },
 };
@@ -814,31 +814,31 @@ export const cafeBranchesApi = {
 
 export const cafeEventsApi = {
   getEvents: async (): Promise<CafeEvent[]> => {
-    const response = await restaurantClient.get('/restaurant/events/');
+    const response = await restaurantClient.get('/park/events/');
     return response.data;
   },
 
   getEvent: async (id: number): Promise<CafeEvent> => {
-    const response = await restaurantClient.get(`/restaurant/events/${id}`);
+    const response = await restaurantClient.get(`/park/events/${id}`);
     return response.data;
   },
 
   createEvent: async (data: CafeEventCreate): Promise<CafeEvent> => {
-    const response = await restaurantClient.post('/restaurant/events/', data);
+    const response = await restaurantClient.post('/park/events/', data);
     return response.data;
   },
 
   updateEvent: async (id: number, data: CafeEventUpdate): Promise<CafeEvent> => {
-    const response = await restaurantClient.put(`/restaurant/events/${id}`, data);
+    const response = await restaurantClient.put(`/park/events/${id}`, data);
     return response.data;
   },
 
   deleteEvent: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/events/${id}`);
+    await restaurantClient.delete(`/park/events/${id}`);
   },
 
   updateEventTranslations: async (id: number, translations: EventTranslation[]): Promise<CafeEvent> => {
-    const response = await restaurantClient.put(`/restaurant/events/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/events/${id}`, { translations });
     return response.data;
   },
 };
@@ -849,31 +849,31 @@ export const cafeEventsApi = {
 
 export const cafeCareersApi = {
   getCareers: async (): Promise<Career[]> => {
-    const response = await restaurantClient.get('/restaurant/careers/');
+    const response = await restaurantClient.get('/park/careers/');
     return response.data;
   },
 
   getCareer: async (id: number): Promise<Career> => {
-    const response = await restaurantClient.get(`/restaurant/careers/${id}`);
+    const response = await restaurantClient.get(`/park/careers/${id}`);
     return response.data;
   },
 
   createCareer: async (data: CareerCreate): Promise<Career> => {
-    const response = await restaurantClient.post('/restaurant/careers/', data);
+    const response = await restaurantClient.post('/park/careers/', data);
     return response.data;
   },
 
   updateCareer: async (id: number, data: CareerUpdate): Promise<Career> => {
-    const response = await restaurantClient.put(`/restaurant/careers/${id}`, data);
+    const response = await restaurantClient.put(`/park/careers/${id}`, data);
     return response.data;
   },
 
   deleteCareer: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/careers/${id}`);
+    await restaurantClient.delete(`/park/careers/${id}`);
   },
 
   updateCareerTranslations: async (id: number, translations: CareerTranslation[]): Promise<Career> => {
-    const response = await restaurantClient.put(`/restaurant/careers/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/careers/${id}`, { translations });
     return response.data;
   },
 };
@@ -884,31 +884,31 @@ export const cafeCareersApi = {
 
 export const cafePromotionsApi = {
   getPromotions: async (): Promise<Promotion[]> => {
-    const response = await restaurantClient.get('/restaurant/promotions/');
+    const response = await restaurantClient.get('/park/promotions/');
     return response.data;
   },
 
   getPromotion: async (id: number): Promise<Promotion> => {
-    const response = await restaurantClient.get(`/restaurant/promotions/${id}`);
+    const response = await restaurantClient.get(`/park/promotions/${id}`);
     return response.data;
   },
 
   createPromotion: async (data: PromotionCreate): Promise<Promotion> => {
-    const response = await restaurantClient.post('/restaurant/promotions/', data);
+    const response = await restaurantClient.post('/park/promotions/', data);
     return response.data;
   },
 
   updatePromotion: async (id: number, data: PromotionUpdate): Promise<Promotion> => {
-    const response = await restaurantClient.put(`/restaurant/promotions/${id}`, data);
+    const response = await restaurantClient.put(`/park/promotions/${id}`, data);
     return response.data;
   },
 
   deletePromotion: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/promotions/${id}`);
+    await restaurantClient.delete(`/park/promotions/${id}`);
   },
 
   updatePromotionTranslations: async (id: number, translations: PromotionTranslation[]): Promise<Promotion> => {
-    const response = await restaurantClient.put(`/restaurant/promotions/${id}`, { translations });
+    const response = await restaurantClient.put(`/park/promotions/${id}`, { translations });
     return response.data;
   },
 };
@@ -919,27 +919,357 @@ export const cafePromotionsApi = {
 
 export const cafeAchievementsApi = {
   getAchievements: async (): Promise<Achievement[]> => {
-    const response = await restaurantClient.get('/restaurant/achievements/');
+    const response = await restaurantClient.get('/park/achievements/');
     return response.data;
   },
 
   getAchievement: async (id: number): Promise<Achievement> => {
-    const response = await restaurantClient.get(`/restaurant/achievements/${id}`);
+    const response = await restaurantClient.get(`/park/achievements/${id}`);
     return response.data;
   },
 
   createAchievement: async (data: AchievementCreate): Promise<Achievement> => {
-    const response = await restaurantClient.post('/restaurant/achievements/', data);
+    const response = await restaurantClient.post('/park/achievements/', data);
     return response.data;
   },
 
   updateAchievement: async (id: number, data: AchievementUpdate): Promise<Achievement> => {
-    const response = await restaurantClient.put(`/restaurant/achievements/${id}`, data);
+    const response = await restaurantClient.put(`/park/achievements/${id}`, data);
     return response.data;
   },
 
   deleteAchievement: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/achievements/${id}`);
+    await restaurantClient.delete(`/park/achievements/${id}`);
+  },
+};
+
+// ==========================================
+// Attractions API
+// ==========================================
+
+export interface AttractionTranslation {
+  locale: string;
+  name: string;
+  short_description?: string;
+  description?: string;
+  safety_notes?: string;
+  experience_notes?: string;
+}
+
+export interface Attraction {
+  id: number;
+  tenant_id: number;
+  space_id?: number | null;
+  category_id?: number | null;
+  code: string;
+  attraction_type: string;
+  experience_type?: string | null;
+  thrill_level?: string | null;
+  min_height_cm?: number | null;
+  max_height_cm?: number | null;
+  min_age?: number | null;
+  max_age?: number | null;
+  duration_minutes?: number | null;
+  operating_hours?: string | null;
+  queue_notes?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_x?: number | null;
+  map_y?: number | null;
+  vr360_link?: string | null;
+  primary_image_media_id?: number | null;
+  is_active: boolean;
+  is_featured: boolean;
+  display_order: number;
+  attributes_json?: Record<string, any> | null;
+  translations: AttractionTranslation[];
+  media?: Array<{ media_id: number; is_primary: boolean; sort_order: number }>;
+}
+
+export interface AttractionCategoryTranslation {
+  locale: string;
+  title: string;
+  description?: string;
+}
+
+export interface AttractionCategory {
+  id: number;
+  code: string;
+  is_active: boolean;
+  display_order: number;
+  translations: AttractionCategoryTranslation[];
+}
+
+export interface AttractionCategoryCreate {
+  code: string;
+  is_active?: boolean;
+  display_order?: number;
+  translations: AttractionCategoryTranslation[];
+}
+
+export interface AttractionCategoryUpdate extends Partial<AttractionCategoryCreate> {}
+
+export interface AttractionCreate {
+  space_id?: number | null;
+  category_id?: number | null;
+  code: string;
+  attraction_type: string;
+  experience_type?: string | null;
+  thrill_level?: string | null;
+  min_height_cm?: number | null;
+  max_height_cm?: number | null;
+  min_age?: number | null;
+  max_age?: number | null;
+  duration_minutes?: number | null;
+  operating_hours?: string | null;
+  queue_notes?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_x?: number | null;
+  map_y?: number | null;
+  vr360_link?: string | null;
+  primary_image_media_id?: number | null;
+  is_active?: boolean;
+  is_featured?: boolean;
+  display_order?: number;
+  attributes_json?: Record<string, any> | null;
+  translations: AttractionTranslation[];
+  media_ids?: number[];
+}
+
+export interface AttractionUpdate extends Partial<AttractionCreate> {}
+
+export const cafeAttractionsApi = {
+  getAttractions: async (): Promise<Attraction[]> => {
+    const response = await restaurantClient.get('/park/attractions/');
+    return response.data;
+  },
+
+  getAttraction: async (id: number): Promise<Attraction> => {
+    const response = await restaurantClient.get(`/park/attractions/${id}`);
+    return response.data;
+  },
+
+  createAttraction: async (data: AttractionCreate): Promise<Attraction> => {
+    const response = await restaurantClient.post('/park/attractions/', data);
+    return response.data;
+  },
+
+  updateAttraction: async (id: number, data: AttractionUpdate): Promise<Attraction> => {
+    const response = await restaurantClient.put(`/park/attractions/${id}`, data);
+    return response.data;
+  },
+
+  deleteAttraction: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/attractions/${id}`);
+  },
+
+  getCategories: async (): Promise<AttractionCategory[]> => {
+    const response = await restaurantClient.get('/park/attractions/categories');
+    return response.data;
+  },
+
+  getCategory: async (id: number): Promise<AttractionCategory> => {
+    const response = await restaurantClient.get(`/park/attractions/categories/${id}`);
+    return response.data;
+  },
+
+  createCategory: async (data: AttractionCategoryCreate): Promise<AttractionCategory> => {
+    const response = await restaurantClient.post('/park/attractions/categories', data);
+    return response.data;
+  },
+
+  updateCategory: async (id: number, data: AttractionCategoryUpdate): Promise<AttractionCategory> => {
+    const response = await restaurantClient.put(`/park/attractions/categories/${id}`, data);
+    return response.data;
+  },
+
+  deleteCategory: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/attractions/categories/${id}`);
+  },
+};
+
+// ==========================================
+// Ticket Types API
+// ==========================================
+
+export interface TicketTypeTranslation {
+  locale: string;
+  name: string;
+  description?: string;
+  terms_and_conditions?: string;
+}
+
+export interface TicketType {
+  id: number;
+  tenant_id: number;
+  code: string;
+  ticket_type: string;
+  audience_type?: string | null;
+  validity_type?: string | null;
+  base_price?: number | null;
+  sale_price?: number | null;
+  currency_code: string;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  min_height_cm?: number | null;
+  max_height_cm?: number | null;
+  min_age?: number | null;
+  max_age?: number | null;
+  max_visits?: number | null;
+  primary_image_media_id?: number | null;
+  is_active: boolean;
+  is_featured: boolean;
+  display_order: number;
+  attributes_json?: Record<string, any> | null;
+  translations: TicketTypeTranslation[];
+  media?: Array<{ media_id: number; is_primary: boolean; sort_order: number }>;
+}
+
+export interface TicketTypeCreate {
+  code: string;
+  ticket_type: string;
+  audience_type?: string | null;
+  validity_type?: string | null;
+  base_price?: number | null;
+  sale_price?: number | null;
+  currency_code?: string;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  min_height_cm?: number | null;
+  max_height_cm?: number | null;
+  min_age?: number | null;
+  max_age?: number | null;
+  max_visits?: number | null;
+  primary_image_media_id?: number | null;
+  is_active?: boolean;
+  is_featured?: boolean;
+  display_order?: number;
+  attributes_json?: Record<string, any> | null;
+  translations: TicketTypeTranslation[];
+  media_ids?: number[];
+}
+
+export interface TicketTypeUpdate extends Partial<TicketTypeCreate> {}
+
+export const cafeTicketTypesApi = {
+  getTicketTypes: async (): Promise<TicketType[]> => {
+    const response = await restaurantClient.get('/park/ticket-types/');
+    return response.data;
+  },
+
+  getTicketType: async (id: number): Promise<TicketType> => {
+    const response = await restaurantClient.get(`/park/ticket-types/${id}`);
+    return response.data;
+  },
+
+  createTicketType: async (data: TicketTypeCreate): Promise<TicketType> => {
+    const response = await restaurantClient.post('/park/ticket-types/', data);
+    return response.data;
+  },
+
+  updateTicketType: async (id: number, data: TicketTypeUpdate): Promise<TicketType> => {
+    const response = await restaurantClient.put(`/park/ticket-types/${id}`, data);
+    return response.data;
+  },
+
+  deleteTicketType: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/ticket-types/${id}`);
+  },
+};
+
+export interface VisitorInfoItemTranslation {
+  locale: string;
+  title: string;
+  subtitle?: string | null;
+  description?: string | null;
+  content?: string | null;
+}
+
+export interface VisitorInfoCategoryTranslation {
+  locale: string;
+  title: string;
+  description?: string | null;
+}
+
+export interface VisitorInfoItem {
+  id: number;
+  item_type: string;
+  is_active: boolean;
+  display_order: number;
+  attributes_json?: Record<string, any> | null;
+  created_at?: string;
+  updated_at?: string;
+  translations: VisitorInfoItemTranslation[];
+}
+
+export interface VisitorInfoCategory {
+  id: number;
+  page_code: string;
+  category_code: string;
+  title: string;
+  icon?: string | null;
+  item_layout?: string | null;
+  is_active: boolean;
+  display_order: number;
+  attributes_json?: Record<string, any> | null;
+  translations: VisitorInfoCategoryTranslation[];
+  items: VisitorInfoItem[];
+}
+
+export interface VisitorInfoCategoryCreate {
+  category_code: string;
+  title?: string | null;
+  icon?: string | null;
+  item_layout?: string | null;
+  is_active?: boolean;
+  display_order?: number;
+  attributes_json?: Record<string, any> | null;
+  translations?: VisitorInfoCategoryTranslation[];
+}
+
+export interface VisitorInfoCategoryUpdate extends Partial<VisitorInfoCategoryCreate> {}
+
+export interface VisitorInfoItemCreate {
+  item_type?: string;
+  is_active?: boolean;
+  display_order?: number;
+  attributes_json?: Record<string, any> | null;
+  translations: VisitorInfoItemTranslation[];
+}
+
+export interface VisitorInfoItemUpdate extends Partial<VisitorInfoItemCreate> {}
+
+export const cafeVisitorInformationApi = {
+  getCategories: async (): Promise<VisitorInfoCategory[]> => {
+    const response = await restaurantClient.get('/park/visitor-information/categories');
+    return response.data;
+  },
+  createCategory: async (data: VisitorInfoCategoryCreate): Promise<VisitorInfoCategory> => {
+    const response = await restaurantClient.post('/park/visitor-information/categories', data);
+    return response.data;
+  },
+  updateCategory: async (id: number, data: VisitorInfoCategoryUpdate): Promise<VisitorInfoCategory> => {
+    const response = await restaurantClient.put(`/park/visitor-information/categories/${id}`, data);
+    return response.data;
+  },
+  deleteCategory: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/visitor-information/categories/${id}`);
+  },
+  createItem: async (categoryId: number, data: VisitorInfoItemCreate): Promise<VisitorInfoCategory> => {
+    const response = await restaurantClient.post(`/park/visitor-information/categories/${categoryId}/items`, data);
+    return response.data;
+  },
+  updateItem: async (itemId: number, data: VisitorInfoItemUpdate): Promise<VisitorInfoCategory> => {
+    const response = await restaurantClient.put(`/park/visitor-information/items/${itemId}`, data);
+    return response.data;
+  },
+  deleteItem: async (itemId: number): Promise<void> => {
+    await restaurantClient.delete(`/park/visitor-information/items/${itemId}`);
   },
 };
 
@@ -986,43 +1316,43 @@ export interface ServiceUpdate extends Partial<ServiceCreate> {}
 
 export const cafeServicesApi = {
   getServices: async (): Promise<Service[]> => {
-    const response = await restaurantClient.get('/restaurant/services');
+    const response = await restaurantClient.get('/park/services');
     return response.data;
   },
 
   getService: async (id: number): Promise<Service> => {
-    const response = await restaurantClient.get(`/restaurant/services/${id}`);
+    const response = await restaurantClient.get(`/park/services/${id}`);
     return response.data;
   },
 
   createService: async (data: ServiceCreate): Promise<Service> => {
-    const response = await restaurantClient.post('/restaurant/services', data);
+    const response = await restaurantClient.post('/park/services', data);
     return response.data;
   },
 
   updateService: async (id: number, data: ServiceUpdate): Promise<Service> => {
-    const response = await restaurantClient.put(`/restaurant/services/${id}`, data);
+    const response = await restaurantClient.put(`/park/services/${id}`, data);
     return response.data;
   },
 
   deleteService: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/services/${id}`);
+    await restaurantClient.delete(`/park/services/${id}`);
   },
 
   reorderService: async (id: number, newOrder: number): Promise<void> => {
-    await restaurantClient.patch(`/restaurant/services/${id}/reorder?new_order=${newOrder}`);
+    await restaurantClient.patch(`/park/services/${id}/reorder?new_order=${newOrder}`);
   },
 
   addServiceMedia: async (serviceId: number, mediaId: number, isPrimary: boolean = false): Promise<void> => {
-    await restaurantClient.post(`/restaurant/services/${serviceId}/media/${mediaId}`, { is_primary: isPrimary });
+    await restaurantClient.post(`/park/services/${serviceId}/media/${mediaId}`, { is_primary: isPrimary });
   },
 
   removeServiceMedia: async (serviceId: number, mediaId: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/services/${serviceId}/media/${mediaId}`);
+    await restaurantClient.delete(`/park/services/${serviceId}/media/${mediaId}`);
   },
 
   getServiceMedia: async (serviceId: number) => {
-    const response = await restaurantClient.get(`/restaurant/services/${serviceId}/media`);
+    const response = await restaurantClient.get(`/park/services/${serviceId}/media`);
     return response.data;
   }
 };
@@ -1259,35 +1589,35 @@ export const cafeAuditLogsApi = {
 
 export const cafeSpacesApi = {
   getSpaces: async (): Promise<Space[]> => {
-    const response = await restaurantClient.get('/restaurant/spaces/');
+    const response = await restaurantClient.get('/park/spaces/');
     return response.data;
   },
 
   getSpace: async (id: number): Promise<Space> => {
-    const response = await restaurantClient.get(`/restaurant/spaces/${id}/`);
+    const response = await restaurantClient.get(`/park/spaces/${id}`);
     return response.data;
   },
 
   createSpace: async (data: SpaceCreate): Promise<Space> => {
-    const response = await restaurantClient.post('/restaurant/spaces/', data);
+    const response = await restaurantClient.post('/park/spaces/', data);
     return response.data;
   },
 
   updateSpace: async (id: number, data: SpaceUpdate): Promise<Space> => {
-    const response = await restaurantClient.put(`/restaurant/spaces/${id}/`, data);
+    const response = await restaurantClient.put(`/park/spaces/${id}`, data);
     return response.data;
   },
 
   deleteSpace: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/spaces/${id}/`);
+    await restaurantClient.delete(`/park/spaces/${id}`);
   },
 
   reorderSpaces: async (spaceIds: number[]): Promise<void> => {
-    await restaurantClient.post('/restaurant/spaces/reorder', { space_ids: spaceIds });
+    await restaurantClient.post('/park/spaces/reorder', { space_ids: spaceIds });
   },
 
   updateSpaceTranslations: async (id: number, translations: SpaceTranslation[]): Promise<Space> => {
-    const response = await restaurantClient.put(`/restaurant/spaces/${id}/`, { translations });
+    const response = await restaurantClient.put(`/park/spaces/${id}`, { translations });
     return response.data;
   },
 };
@@ -1301,35 +1631,35 @@ export const cafeContentSectionsApi = {
     const params = new URLSearchParams();
     if (pageCode) params.append('page_code', pageCode);
     if (sectionType) params.append('section_type', sectionType);
-    const response = await restaurantClient.get(`/restaurant/content-sections/?${params.toString()}`);
+    const response = await restaurantClient.get(`/park/content-sections/?${params.toString()}`);
     return response.data;
   },
 
   getContentSection: async (id: number): Promise<ContentSection> => {
-    const response = await restaurantClient.get(`/restaurant/content-sections/${id}/`);
+    const response = await restaurantClient.get(`/park/content-sections/${id}/`);
     return response.data;
   },
 
   createContentSection: async (data: ContentSectionCreate): Promise<ContentSection> => {
-    const response = await restaurantClient.post('/restaurant/content-sections/', data);
+    const response = await restaurantClient.post('/park/content-sections/', data, { timeout: 30000 });
     return response.data;
   },
 
   updateContentSection: async (id: number, data: ContentSectionUpdate): Promise<ContentSection> => {
-    const response = await restaurantClient.put(`/restaurant/content-sections/${id}/`, data);
+    const response = await restaurantClient.put(`/park/content-sections/${id}/`, data, { timeout: 30000 });
     return response.data;
   },
 
   deleteContentSection: async (id: number): Promise<void> => {
-    await restaurantClient.delete(`/restaurant/content-sections/${id}/`);
+    await restaurantClient.delete(`/park/content-sections/${id}/`);
   },
 
   reorderContentSections: async (sectionIds: number[]): Promise<void> => {
-    await restaurantClient.post('/restaurant/content-sections/reorder', { section_ids: sectionIds });
+    await restaurantClient.post('/park/content-sections/reorder', { section_ids: sectionIds });
   },
 
   updateContentSectionTranslations: async (id: number, translations: ContentSectionTranslation[]): Promise<ContentSection> => {
-    const response = await restaurantClient.put(`/restaurant/content-sections/${id}/`, { translations });
+    const response = await restaurantClient.put(`/park/content-sections/${id}/`, { translations });
     return response.data;
   },
 };
@@ -1340,10 +1670,12 @@ export default {
   pageSettings: cafePageSettingsApi,
   menu: cafeMenuApi,
   branches: cafeBranchesApi,
+  attractions: cafeAttractionsApi,
   events: cafeEventsApi,
   careers: cafeCareersApi,
   promotions: cafePromotionsApi,
   achievements: cafeAchievementsApi,
+  ticketTypes: cafeTicketTypesApi,
   services: cafeServicesApi,
   spaces: cafeSpacesApi,
   contentSections: cafeContentSectionsApi,
@@ -1369,10 +1701,12 @@ export const restaurantPageSettingsApi = cafePageSettingsApi;
 export const restaurantLanguagesApi = cafeLanguagesApi;
 export const restaurantMenuApi = cafeMenuApi;
 export const restaurantBranchesApi = cafeBranchesApi;
+export const restaurantAttractionsApi = cafeAttractionsApi;
 export const restaurantEventsApi = cafeEventsApi;
 export const restaurantCareersApi = cafeCareersApi;
 export const restaurantPromotionsApi = cafePromotionsApi;
 export const restaurantAchievementsApi = cafeAchievementsApi;
+export const restaurantTicketTypesApi = cafeTicketTypesApi;
 export const restaurantServicesApi = cafeServicesApi;
 export const restaurantActivityLogsApi = cafeActivityLogsApi;
 export const restaurantAuditLogsApi = cafeAuditLogsApi;
@@ -1391,8 +1725,15 @@ export type RestaurantEventUpdate = CafeEventUpdate;
 export type RestaurantAchievement = Achievement;
 export type RestaurantAchievementCreate = AchievementCreate;
 export type RestaurantAchievementUpdate = AchievementUpdate;
+export type RestaurantAttraction = Attraction;
+export type RestaurantAttractionCreate = AttractionCreate;
+export type RestaurantAttractionUpdate = AttractionUpdate;
+export type RestaurantTicketType = TicketType;
+export type RestaurantTicketTypeCreate = TicketTypeCreate;
+export type RestaurantTicketTypeUpdate = TicketTypeUpdate;
 export type RestaurantLanguage = CafeLanguage;
 export type RestaurantContact = CafeContact;
 export type RestaurantContactUpdate = CafeContactUpdate;
 
 export const transformRestaurantActivityLogs = transformCafeActivityLogs;
+

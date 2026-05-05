@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import VR360SettingsSection from '../../components/VR360SettingsSection';
 import type {
     RestaurantPageSettings,
     ContentSection,
@@ -60,6 +61,7 @@ interface PageSettingsFormState {
   is_displaying: boolean;
   vr360_link: string;
   vr_title: string;
+  settings_json?: Record<string, any> | null;
 }
 
 interface RestaurantHomeAboutPageProps {
@@ -118,7 +120,38 @@ const buildPageSettingsState = (
   is_displaying: pageSettings?.is_displaying ?? true,
   vr360_link: pageSettings?.vr360_link || '',
   vr_title: pageSettings?.vr_title || '',
+  settings_json: pageSettings?.settings_json || null,
 });
+
+const buildIntroductionFromSettingsJson = (
+  locales: string[],
+  pageCode: 'home' | 'about',
+  settingsJson?: Record<string, any> | null,
+): IntroductionFormState | null => {
+  const intro = settingsJson?.introduction;
+  if (!intro || typeof intro !== 'object') {
+    return null;
+  }
+
+  const translations = buildBlankTranslations(locales);
+  const rawTranslations = intro.translations && typeof intro.translations === 'object' ? intro.translations : {};
+
+  Object.entries(rawTranslations).forEach(([locale, value]) => {
+    const translation = value as Partial<TranslationFormValue> | undefined;
+    translations[locale] = {
+      title: translation?.title || '',
+      description: translation?.description || '',
+      content: translation?.content || '',
+    };
+  });
+
+  return {
+    page_code: pageCode,
+    section_type: 'introduction',
+    is_active: intro.is_active ?? true,
+    translations,
+  };
+};
 
 const RestaurantHomeAboutPage: React.FC<RestaurantHomeAboutPageProps> = ({
   pageCode,
@@ -144,18 +177,26 @@ const RestaurantHomeAboutPage: React.FC<RestaurantHomeAboutPageProps> = ({
       setSupportedLanguages(resolvedLocales);
       setCurrentLocale((prev) => (resolvedLocales.includes(prev) ? prev : resolvedLocales[0]));
 
-      const [sections, pageSetting] = await Promise.all([
-        restaurantContentSectionsApi.getContentSections(pageCode, 'introduction'),
-        restaurantPageSettingsApi.getPageSetting(pageCode).catch((error) => {
-          if (axios.isAxiosError(error) && error.response?.status === 404) {
-            return null;
-          }
-          throw error;
-        }),
-      ]);
+      const pageSetting = await restaurantPageSettingsApi.getPageSetting(pageCode).catch((error) => {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      });
 
-      const introductionSection = sections[0];
-      const nextIntroduction = buildIntroductionState(resolvedLocales, pageCode, introductionSection);
+      const introductionFromSettings = buildIntroductionFromSettingsJson(
+        resolvedLocales,
+        pageCode,
+        pageSetting?.settings_json || null,
+      );
+
+      const nextIntroduction = introductionFromSettings
+        ? introductionFromSettings
+        : buildIntroductionState(
+            resolvedLocales,
+            pageCode,
+            (await restaurantContentSectionsApi.getContentSections(pageCode, 'introduction'))[0],
+          );
       const nextPageSettings = buildPageSettingsState(pageCode, pageSetting || undefined);
 
       setIntroduction(nextIntroduction);
@@ -218,27 +259,43 @@ const RestaurantHomeAboutPage: React.FC<RestaurantHomeAboutPageProps> = ({
         content: introduction.translations[locale]?.content || '',
       }));
 
-      const contentPayload = {
-        section_type: 'introduction',
+      const savedPageSetting = await restaurantPageSettingsApi.createOrUpdatePageSetting({
         page_code: pageCode,
-        is_active: pageSettings.is_displaying,
-        translations,
+        is_displaying: pageSettings.is_displaying,
+        vr360_link: pageSettings.vr360_link || null,
+        vr_title: pageSettings.vr_title || null,
+        settings_json: {
+          ...(pageSettings.settings_json || {}),
+          introduction: {
+            is_active: introduction.is_active,
+            translations: Object.fromEntries(
+              translations.map((translation) => [
+                translation.locale,
+                {
+                  title: translation.title,
+                  description: translation.description,
+                  content: translation.content,
+                },
+              ]),
+            ),
+          },
+        },
+      });
+
+      const nextIntroduction: IntroductionFormState = {
+        ...introduction,
+        translations: Object.fromEntries(
+          translations.map((translation) => [
+            translation.locale,
+            {
+              title: translation.title,
+              description: translation.description,
+              content: translation.content,
+            },
+          ]),
+        ) as Record<string, TranslationFormValue>,
       };
-
-      const [savedSection] = await Promise.all([
-        introduction.id
-          ? restaurantContentSectionsApi.updateContentSection(introduction.id, contentPayload)
-          : restaurantContentSectionsApi.createContentSection(contentPayload),
-        restaurantPageSettingsApi.createOrUpdatePageSetting({
-          page_code: pageCode,
-          is_displaying: pageSettings.is_displaying,
-          vr360_link: pageSettings.vr360_link || null,
-          vr_title: pageSettings.vr_title || null,
-        }),
-      ]);
-
-      const nextIntroduction = buildIntroductionState(supportedLanguages, pageCode, savedSection);
-      const nextPageSettings = { ...pageSettings };
+      const nextPageSettings = buildPageSettingsState(pageCode, savedPageSetting);
 
       setIntroduction(nextIntroduction);
       setInitialIntroduction(JSON.parse(JSON.stringify(nextIntroduction)));

@@ -4,6 +4,7 @@ import {
   faBullhorn,
   faCalendarAlt,
   faChartLine,
+  faCircleInfo,
   faGear,
   faGlobe,
   faHome,
@@ -22,11 +23,21 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { usePermissions } from '../../hooks/usePermissions';
 
+type NavLinkItem = {
+  path: string;
+  icon: any;
+  label: string;
+  visible: boolean;
+  matchPaths?: string[];
+};
+
 const RestaurantSidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const permissions = usePermissions();
-  const basePath = '/restaurant';
+  const basePath = '/park';
+  const tenantName = localStorage.getItem('tenant_name') || 'Adventure Park Admin';
+  const tenantLabel = localStorage.getItem('tenant_code') || 'Adventure Park';
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to logout?")) {
@@ -35,46 +46,137 @@ const RestaurantSidebar: React.FC = () => {
     }
   };
 
-  const isActive = (path: string) => {
+  const isPathActive = (path: string) => {
     if (path === basePath) {
-      return (
-        location.pathname === basePath ||
-        location.pathname === `${basePath}/` ||
-        location.pathname === '/restaurant/'
-      );
+      return location.pathname === basePath || location.pathname === `${basePath}/`;
     }
     return location.pathname.startsWith(path);
   };
 
-  // Define nav items - All English
+  const isActive = (link: NavLinkItem) => {
+    const matchPaths = link.matchPaths ?? [link.path];
+    return matchPaths.some(isPathActive);
+  };
+
   const navItems = [
     {
-      section: 'SYSTEM ADMIN',
-      links: [
-        { path: `${basePath}/tenants`, icon: faShieldAlt, label: 'Tenants', visible: permissions.canManageTenant || permissions.isAdmin },
-        { path: `${basePath}/users`, icon: faBriefcase, label: 'Users', visible: permissions.canManageUsers },
-      ],
-    },
-    {
-      section: 'CONTENT MANAGEMENT',
+      section: 'OVERVIEW',
       links: [
         { path: basePath, icon: faChartLine, label: 'Dashboard', visible: true },
-        { path: `${basePath}/home`, icon: faHome, label: 'Home', visible: true },
-        { path: `${basePath}/about`, icon: faInfo, label: 'About', visible: true },
-        { path: `${basePath}/menu`, icon: faUtensils, label: 'Menu', visible: true },
-        { path: `${basePath}/space`, icon: faWarehouse, label: 'Spaces', visible: true },
-        { path: `${basePath}/branches`, icon: faMapMarkerAlt, label: 'Branches', visible: true },
-        { path: `${basePath}/events`, icon: faCalendarAlt, label: 'Events', visible: true },
-        { path: `${basePath}/careers`, icon: faBriefcase, label: 'Careers', visible: true },
-        { path: `${basePath}/promotions`, icon: faBullhorn, label: 'Promotions', visible: true },
-        { path: `${basePath}/achievements`, icon: faTrophy, label: 'Achievements', visible: true },
-        { path: `${basePath}/gallery`, icon: faImages, label: 'Gallery', visible: true },
-        { path: `${basePath}/contact`, icon: faPhone, label: 'Contact', visible: true },
+        {
+          path: `${basePath}/home`,
+          icon: faHome,
+          label: 'Home',
+          visible: true,
+          matchPaths: [`${basePath}/info`, `${basePath}/home`],
+        },
+        {
+          path: `${basePath}/introduction`,
+          icon: faCircleInfo,
+          label: 'Introduction',
+          visible: true,
+          matchPaths: [`${basePath}/introduction`, `${basePath}/about`],
+        },
       ],
     },
     {
-      section: 'SETTINGS',
+      section: 'ATTRACTIONS',
       links: [
+        {
+          path: `${basePath}/map-tour`,
+          icon: faWarehouse,
+          label: 'Map & Tour',
+          visible: true,
+          matchPaths: [`${basePath}/map-tour`],
+        },
+        {
+          path: `${basePath}/attractions`,
+          icon: faMapMarkerAlt,
+          label: 'Points of Interest',
+          visible: true,
+          matchPaths: [`${basePath}/attractions`],
+        },
+        {
+          path: `${basePath}/games-activities`,
+          icon: faCalendarAlt,
+          label: 'Games & Activities',
+          visible: true,
+          matchPaths: [`${basePath}/games-activities`],
+        },
+      ],
+    },
+    {
+      section: 'SERVICES',
+      links: [
+        {
+          path: `${basePath}/ticket-types`,
+          icon: faUtensils,
+          label: 'Ticket Types & Pricing',
+          visible: true,
+          matchPaths: [`${basePath}/ticket-types`],
+        },
+        {
+          path: `${basePath}/schedule-events`,
+          icon: faCalendarAlt,
+          label: 'Schedule & Events',
+          visible: true,
+          matchPaths: [`${basePath}/schedule-events`, `${basePath}/events`],
+        },
+        {
+          path: `${basePath}/dining-services`,
+          icon: faUtensils,
+          label: 'Dining',
+          visible: true,
+          matchPaths: [`${basePath}/dining-services`],
+        },
+        {
+          path: `${basePath}/services-support`,
+          icon: faPhone,
+          label: 'Services & Support',
+          visible: true,
+          matchPaths: [`${basePath}/services-support`, `${basePath}/services`],
+        },
+      ],
+    },
+    {
+      section: 'INFORMATION',
+      links: [
+        {
+          path: `${basePath}/visit-info`,
+          icon: faInfo,
+          label: 'Visitor Information',
+          visible: true,
+          matchPaths: [`${basePath}/visit-info`],
+        },
+        { path: `${basePath}/contact`, icon: faPhone, label: 'Contact', visible: true },
+        { path: `${basePath}/careers`, icon: faBriefcase, label: 'Careers', visible: true },
+        {
+          path: `${basePath}/offers`,
+          icon: faBullhorn,
+          label: 'Offers',
+          visible: true,
+          matchPaths: [`${basePath}/offers`, `${basePath}/promotions`],
+        },
+        {
+          path: `${basePath}/library`,
+          icon: faImages,
+          label: 'Library',
+          visible: true,
+          matchPaths: [`${basePath}/library`, `${basePath}/gallery`],
+        },
+        {
+          path: `${basePath}/achievements`,
+          icon: faTrophy,
+          label: 'Achievements',
+          visible: true,
+        },
+      ],
+    },
+    {
+      section: 'SYSTEM',
+      links: [
+        { path: `${basePath}/users`, icon: faBriefcase, label: 'Users', visible: permissions.canManageUsers },
+        { path: `${basePath}/tenants`, icon: faShieldAlt, label: 'Tenants', visible: permissions.canManageTenant || permissions.isAdmin },
         { path: `${basePath}/languages`, icon: faGlobe, label: 'Languages', visible: true },
         { path: `${basePath}/settings`, icon: faGear, label: 'Settings', visible: true },
       ],
@@ -82,62 +184,66 @@ const RestaurantSidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="bg-gradient-to-b from-slate-800 to-slate-900 text-white w-64 fixed h-full overflow-y-auto hidden sm:block">
-      <div className="p-4 flex items-center gap-2.5 border-b border-slate-700">
-        <div className="bg-amber-500 p-1.5 rounded-lg">
-          <FontAwesomeIcon icon={faUtensils} className="w-5 h-5" />
+    <aside className="fixed hidden h-full w-64 overflow-y-auto bg-slate-900 text-white sm:block">
+      <div className="border-b border-slate-800 p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="rounded-lg bg-emerald-500 p-1.5 shadow-lg shadow-emerald-500/30">
+            <FontAwesomeIcon icon={faUtensils} className="h-5 w-5" />
+          </div>
+          <span className="text-lg font-bold">Adventure Park</span>
         </div>
-        <span className="text-lg font-bold">VR Restaurant</span>
       </div>
 
-      <nav className="p-6">
+      <div className="border-b border-slate-800 bg-slate-800/40 px-4 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tenantLabel}</p>
+        <p className="mt-1 text-sm font-semibold text-slate-100">{tenantName}</p>
+      </div>
+
+      <nav className="p-5">
         {navItems.map((section) => {
-          // Filter visible links
           const visibleLinks = section.links.filter(link => link.visible);
-          
-          // Don't render section if no visible links
+
           if (visibleLinks.length === 0) {
             return null;
           }
-          
+
           return (
             <div key={section.section} className="mb-6">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{section.section}</h3>
-              <ul>
+              <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{section.section}</h3>
+              <ul className="space-y-1">
                 {visibleLinks.map((link) => {
-                  const active = isActive(link.path);
+                  const active = isActive(link);
                   const isCoreAdmin = link.path.startsWith('/admin');
                   const isSettings = link.path === '/settings';
-                  
+
                   return (
                     <li key={link.path}>
                       <Link
                         to={link.path}
                         onClick={() => {
-                          // Store context when navigating to Core Admin or Settings from Restaurant
                           if (isCoreAdmin || isSettings) {
-                            localStorage.setItem('admin_context', 'restaurant');
+                            localStorage.setItem('admin_context', 'park');
                           }
                         }}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                           active
-                            ? 'bg-blue-600 text-white shadow-lg'
-                            : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
-                        <FontAwesomeIcon icon={link.icon} className="w-5 h-5" />
+                        <FontAwesomeIcon icon={link.icon} className="h-4 w-4" />
                         <span>{link.label}</span>
                       </Link>
                     </li>
                   );
                 })}
-                {section.section === 'SETTINGS' && (
+                {section.section === 'SYSTEM' && (
                   <li>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors w-full text-slate-300 hover:bg-slate-700 hover:text-white"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                     >
-                      <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
+                      <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
                       <span>Logout</span>
                     </button>
                   </li>

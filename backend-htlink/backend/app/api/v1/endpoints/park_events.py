@@ -1,7 +1,7 @@
 """
 Restaurant Events API endpoints.
 
-Handles restaurant events management with multi-language support
+Handles Restaurant Events management with multi-language support
 """
 from typing import Optional, List
 from datetime import date
@@ -21,6 +21,7 @@ from app.models.restaurant import (
     EventStatus
 )
 from app.utils.activity_logger import log_user_activity
+from app.utils.delete_helpers import delete_related_rows
 
 router = APIRouter()
 
@@ -54,6 +55,7 @@ class CafeEventResponse(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     branch_id: Optional[int] = None
+    space_id: Optional[int] = None
     location_text: Optional[str] = None
     registration_url: Optional[str] = None
     max_participants: Optional[int] = None
@@ -74,6 +76,7 @@ class CafeEventCreate(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     branch_id: Optional[int] = None
+    space_id: Optional[int] = None
     location_text: Optional[str] = None
     registration_url: Optional[str] = None
     max_participants: Optional[int] = None
@@ -94,6 +97,7 @@ class CafeEventUpdate(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     branch_id: Optional[int] = None
+    space_id: Optional[int] = None
     location_text: Optional[str] = None
     registration_url: Optional[str] = None
     max_participants: Optional[int] = None
@@ -126,6 +130,7 @@ def get_event_with_relations(event_id: int, db: Session) -> dict:
     
     return {
         **event.model_dump(),
+        "branch_id": event.location_id,
         "translations": [
             EventTranslationSchema(
                 locale=t.locale,
@@ -182,7 +187,8 @@ def get_events(
             end_date=event.end_date,
             start_time=event.start_time,
             end_time=event.end_time,
-            branch_id=event.branch_id,
+            branch_id=event.location_id,
+            space_id=event.space_id,
             location_text=event.location_text,
             registration_url=event.registration_url,
             max_participants=event.max_participants,
@@ -246,10 +252,9 @@ def create_event(
     if existing:
         raise HTTPException(status_code=400, detail="Event code already exists")
     
-    new_event = CafeEvent(
-        tenant_id=current_user.tenant_id,
-        **event_data.model_dump(exclude={'translations', 'media_ids'})
-    )
+    payload = event_data.model_dump(exclude={"translations", "media_ids"})
+    payload["location_id"] = payload.pop("branch_id", None)
+    new_event = CafeEvent(tenant_id=current_user.tenant_id, **payload)
     
     db.add(new_event)
     db.commit()
@@ -306,10 +311,14 @@ def update_event(
     if not event or event.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Event not found")
     
-    for key, value in event_data.model_dump(
+    update_data = event_data.model_dump(
         exclude_unset=True,
         exclude={'translations', 'media_ids'}
-    ).items():
+    )
+    if "branch_id" in update_data:
+        update_data["location_id"] = update_data.pop("branch_id")
+
+    for key, value in update_data.items():
         if value is not None:
             setattr(event, key, value)
             if key == 'attributes_json':
@@ -383,22 +392,16 @@ def delete_event(
     
     if not event or event.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=404, detail="Event not found")
-    
-    event_title = event.code
+
+    delete_related_rows(db, CafeEventTranslation, CafeEventTranslation.event_id == event_id)
+    delete_related_rows(db, CafeEventMedia, CafeEventMedia.event_id == event_id)
+
+    db.flush()
     db.delete(event)
     db.commit()
-
-    log_user_activity(
-        db,
-        current_user,
-        ActivityType.DELETE_POST,
-        f'Event "{event_title}" deleted',
-        resource_type="restaurant_event",
-        resource_id=event_id,
-        extra_details={"title": event_title, "code": event.code},
-    )
     
     return {"success": True, "message": "Event deleted"}
+
 
 
 
