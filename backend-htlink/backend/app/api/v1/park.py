@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     park_careers,
     park_contact,
     park_content_sections,
+    park_dining,
     park_events,
     park_languages,
     park_promotions,
@@ -33,6 +34,7 @@ park_router.include_router(park_attractions.router, prefix="/attractions")
 
 # Products and services
 park_router.include_router(park_ticket_types.router, prefix="/ticket-types")
+park_router.include_router(park_dining.router, prefix="/dining")
 park_router.include_router(park_services.router, prefix="/services")
 park_router.include_router(park_promotions.router, prefix="/promotions")
 

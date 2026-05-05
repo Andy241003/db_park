@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import MediaSelectionSection from '../../components/MediaSelectionSection';
 import VR360SettingsSection from '../../components/VR360SettingsSection';
-import { cafeLanguagesApi, cafeServicesApi, cafeSettingsApi, type Service, type ServiceCreate, type ServiceTranslation } from '../../services/restaurantApi';
+import { cafeDiningApi, cafeLanguagesApi, cafeServicesApi, cafeSettingsApi, type Service, type ServiceCreate, type ServiceTranslation } from '../../services/restaurantApi';
 import { getApiBaseUrl } from '../../utils/api';
 
 const { TextArea } = Input;
@@ -91,6 +91,7 @@ const CafeServices: React.FC<CafeServicesProps> = ({ pageMode = 'services' }) =>
   const filterAllLabel = isDiningPage ? 'All Dining Items' : 'All Services';
   const settingsPrefix = isDiningPage ? 'dining' : 'services';
   const typeOptions = isDiningPage ? DINING_SERVICE_TYPES : SUPPORT_SERVICE_TYPES;
+  const dataApi = isDiningPage ? cafeDiningApi : cafeServicesApi;
   const allowedTypeValues = new Set(typeOptions.map((item) => item.value));
   // Services state
   const [services, setServices] = useState<Service[]>([]);
@@ -153,7 +154,7 @@ const CafeServices: React.FC<CafeServicesProps> = ({ pageMode = 'services' }) =>
   const loadServices = async () => {
     setServicesLoading(true);
     try {
-      const data = await cafeServicesApi.getServices();
+      const data = await dataApi.getServices();
       setServices(data.filter((item) => allowedTypeValues.has(item.service_type)));
     } catch (error) {
       toast.error('Failed to load services');
@@ -258,11 +259,11 @@ const CafeServices: React.FC<CafeServicesProps> = ({ pageMode = 'services' }) =>
       };
 
       if (editingService) {
-        await cafeServicesApi.updateService(editingService.id, payload);
-        toast.success('Service updated successfully');
+        await dataApi.updateService(editingService.id, payload);
+        toast.success(isDiningPage ? 'Dining updated successfully' : 'Service updated successfully');
       } else {
-        await cafeServicesApi.createService(payload);
-        toast.success('Service created successfully');
+        await dataApi.createService(payload);
+        toast.success(isDiningPage ? 'Dining created successfully' : 'Service created successfully');
       }
 
       setModalVisible(false);
@@ -298,8 +299,8 @@ const CafeServices: React.FC<CafeServicesProps> = ({ pageMode = 'services' }) =>
 
   const handleDeleteService = async (serviceId: number) => {
     try {
-      await cafeServicesApi.deleteService(serviceId);
-      toast.success('Service deleted successfully');
+      await dataApi.deleteService(serviceId);
+      toast.success(isDiningPage ? 'Dining deleted successfully' : 'Service deleted successfully');
       loadServices();
     } catch (error) {
       toast.error('Failed to delete service');
@@ -812,7 +813,6 @@ const CafeServices: React.FC<CafeServicesProps> = ({ pageMode = 'services' }) =>
 };
 
 export default CafeServices;
-
 
 
 

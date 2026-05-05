@@ -179,7 +179,7 @@ def get_restaurant_settings(
     if not settings:
         return CafeSettingsResponse(
             tenant_id=current_user.tenant_id,
-            park_name="My Restaurant",
+            park_name="Adventure Park",
             primary_color="#6f4e37",
             secondary_color="#d4a574",
             background_color="#ffffff"
@@ -227,7 +227,7 @@ def create_or_update_restaurant_settings(
     if 'business_hours' in settings_dict:
         settings_dict['operating_hours'] = settings_dict.pop('business_hours')
     if 'park_name' not in settings_dict or settings_dict.get('park_name') is None:
-        settings_dict['park_name'] = 'My Restaurant'
+        settings_dict['park_name'] = 'Adventure Park'
 
     new_settings = CafeSettings(
         tenant_id=current_user.tenant_id,

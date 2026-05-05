@@ -182,7 +182,7 @@ function App() {
                         <Route path="achievements" element={<ParkAchievements />} />
                         <Route path="gallery" element={<ParkGallery />} />
                         <Route path="library" element={<ParkGallery />} />
-                        <Route path="media" element={<Media defaultSource="vr_hotel" />} />
+                        <Route path="media" element={<Media defaultSource="restaurant" />} />
                         <Route path="contact" element={<ParkContact />} />
                         <Route path="languages" element={<ParkLanguages />} />
                         <Route path="services" element={<ParkServices />} />
@@ -237,6 +237,5 @@ function App() {
 }
 
 export default App;
-
 
 

@@ -66,7 +66,7 @@ const RestaurantSpace: React.FC = () => {
       setVrTitle(settings.settings_json?.spaces_vr_title || '');
       setSpaces(spaceData);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to load spaces');
+      toast.error(error.message || 'Failed to load map & tour items');
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ const RestaurantSpace: React.FC = () => {
       const data = await cafeSpacesApi.getSpaces();
       setSpaces(data);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to load spaces');
+      toast.error(error.message || 'Failed to load map & tour items');
     }
   };
 
@@ -265,28 +265,28 @@ const RestaurantSpace: React.FC = () => {
       setSaving(true);
       if (editingSpace.id) {
         await cafeSpacesApi.updateSpace(editingSpace.id, payload);
-        toast.success('Space updated successfully');
+        toast.success('Map & Tour item updated successfully');
       } else {
         await cafeSpacesApi.createSpace(payload);
-        toast.success('Space created successfully');
+        toast.success('Map & Tour item created successfully');
       }
       setEditingSpace(null);
       await loadSpaces();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save space');
+      toast.error(error.message || 'Failed to save map & tour item');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this space?')) return;
+    if (!confirm('Are you sure you want to delete this map & tour item?')) return;
     try {
       await cafeSpacesApi.deleteSpace(id);
-      toast.success('Space deleted successfully');
+      toast.success('Map & Tour item deleted successfully');
       await loadSpaces();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete space');
+      toast.error(error.message || 'Failed to delete map & tour item');
     }
   };
 
@@ -326,9 +326,9 @@ const RestaurantSpace: React.FC = () => {
     try {
       setReordering(true);
       await persistSpaceOrder(reorderedSpaces);
-      toast.success('Space order updated');
+      toast.success('Map & Tour order updated');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to reorder spaces');
+      toast.error(error.message || 'Failed to reorder map & tour items');
       await loadSpaces();
     } finally {
       setReordering(false);
@@ -346,7 +346,7 @@ const RestaurantSpace: React.FC = () => {
         },
       });
       setIsDisplaying(value);
-      toast.success(value ? 'Spaces section enabled' : 'Spaces section disabled');
+      toast.success(value ? 'Map & Tour section enabled' : 'Map & Tour section disabled');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to update display status');
     } finally {
@@ -417,14 +417,14 @@ const RestaurantSpace: React.FC = () => {
   });
 
   if (loading) {
-    return <div className="flex h-64 items-center justify-center text-slate-600">Loading spaces...</div>;
+    return <div className="flex h-64 items-center justify-center text-slate-600">Loading map & tour...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className={SECTION_CLASS}>
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
-          <h2 className="text-xl font-bold text-slate-800">Display Status - Spaces Section</h2>
+          <h2 className="text-xl font-bold text-slate-800">Display Status - Map & Tour Section</h2>
           <div className="flex items-center gap-3">
             <span className={`text-sm font-medium ${isDisplaying ? 'text-green-600' : 'text-slate-500'}`}>
               {isDisplaying ? 'Displaying' : 'Hidden'}
@@ -437,7 +437,7 @@ const RestaurantSpace: React.FC = () => {
         </div>
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
           <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 text-blue-600" />
-          <span>When disabled, the Spaces section will be hidden on the website.</span>
+          <span>When disabled, the Map & Tour section will be hidden on the website.</span>
         </div>
       </div>
 
@@ -508,10 +508,10 @@ const RestaurantSpace: React.FC = () => {
       {!editingSpace && (
         <div className={SECTION_CLASS}>
           <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 className="text-xl font-bold text-slate-800">Space Management</h2>
+            <h2 className="text-xl font-bold text-slate-800">Map & Tour Items</h2>
             <button onClick={handleAddNew} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700">
               <FontAwesomeIcon icon={faPlus} />
-              Add New Space
+              Add New Item
             </button>
           </div>
 
@@ -522,7 +522,7 @@ const RestaurantSpace: React.FC = () => {
               onChange={(e) => setSpaceFilter(e.target.value as 'all' | 'active' | 'inactive')}
               className="rounded-md border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Spaces</option>
+              <option value="all">All Items</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
@@ -552,7 +552,7 @@ const RestaurantSpace: React.FC = () => {
                     </div>
                     <div className="flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 lg:w-52">
                       {imageUrl ? (
-                        <img src={imageUrl} alt={viName || enName || 'Space'} className="h-full w-full object-cover" />
+                        <img src={imageUrl} alt={viName || enName || 'Map & Tour item'} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-slate-400"><FontAwesomeIcon icon={faEye} /></div>
                       )}
@@ -573,11 +573,11 @@ const RestaurantSpace: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-3 self-start md:self-auto">
-                      <button type="button" title="Edit space" onClick={() => handleEdit(space)} className="flex items-center gap-2 rounded-md border border-slate-600 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-50">
+                      <button type="button" title="Edit item" onClick={() => handleEdit(space)} className="flex items-center gap-2 rounded-md border border-slate-600 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-50">
                         <FontAwesomeIcon icon={faPenToSquare} />
                         Edit
                       </button>
-                      <button type="button" title="Delete space" onClick={() => void handleDelete(space.id)} className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700">
+                      <button type="button" title="Delete item" onClick={() => void handleDelete(space.id)} className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700">
                         <FontAwesomeIcon icon={faTrash} />
                         Delete
                       </button>
@@ -593,7 +593,7 @@ const RestaurantSpace: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white shadow-xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white p-6">
-              <h3 className="text-xl font-bold text-slate-800">{editingSpace.id ? 'Edit Space' : 'Add New Space'}</h3>
+              <h3 className="text-xl font-bold text-slate-800">{editingSpace.id ? 'Edit Map & Tour Item' : 'Add New Map & Tour Item'}</h3>
               <button type="button" onClick={() => setEditingSpace(null)} className="flex h-10 w-10 items-center justify-center rounded-md text-2xl text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                 <FontAwesomeIcon icon={faXmark} />
               </button>
@@ -617,8 +617,8 @@ const RestaurantSpace: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className={LABEL_CLASS}>Space Name *</label>
-                  <input className={FIELD_CLASS} value={currentTranslation.name} onChange={(e) => handleTranslationChange(currentLocale, 'name', e.target.value)} placeholder="Enter space name..." />
+                  <label className={LABEL_CLASS}>Item Name *</label>
+                  <input className={FIELD_CLASS} value={currentTranslation.name} onChange={(e) => handleTranslationChange(currentLocale, 'name', e.target.value)} placeholder="Enter item name..." />
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Description</label>
@@ -632,7 +632,7 @@ const RestaurantSpace: React.FC = () => {
                 <div><label className={LABEL_CLASS}>Area Size</label><input className={FIELD_CLASS} value={editingSpace.area_size || ''} onChange={(e) => handleFieldChange('area_size', e.target.value)} placeholder="e.g., 100 m2" /></div>
                 <div><label className={LABEL_CLASS}>Display Order</label><input type="number" className={FIELD_CLASS} value={editingSpace.display_order} onChange={(e) => handleFieldChange('display_order', parseInt(e.target.value, 10) || 0)} /></div>
                 <div className="sm:col-span-2"><label className={LABEL_CLASS}>VR360 Tour Link</label><input className={FIELD_CLASS} value={editingSpace.vr360_url || ''} onChange={(e) => handleFieldChange('vr360_url', e.target.value)} placeholder="https://example.com/vr-tour" />
-                  <p className="mt-1 text-xs text-slate-500">Optional item-level VR tour link for this space.</p>
+                  <p className="mt-1 text-xs text-slate-500">Optional item-level VR tour link for this map & tour item.</p>
                 </div>
               </div>
 
@@ -684,12 +684,12 @@ const RestaurantSpace: React.FC = () => {
               <div className="mt-4"><label className={LABEL_CLASS}>Status</label><select className={FIELD_CLASS} value={editingSpace.is_active ? 'active' : 'inactive'} onChange={(e) => handleFieldChange('is_active', e.target.value === 'active')}><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
 
               <div className="mt-6">
-                <label className={`${LABEL_CLASS} flex items-center gap-2`}><FontAwesomeIcon icon={faImages} />Space Images</label>
+                <label className={`${LABEL_CLASS} flex items-center gap-2`}><FontAwesomeIcon icon={faImages} />Item Images</label>
                 <button type="button" onClick={() => setMediaPickerVisible(true)} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"><FontAwesomeIcon icon={faImages} />Select Images</button>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {editingSpace.media_ids.map((mediaId) => (
                     <div key={mediaId} className="group relative overflow-hidden rounded-md border border-slate-200 bg-slate-50">
-                      <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Space media ${mediaId}`} className="h-24 w-full object-cover" />
+                      <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Map & Tour media ${mediaId}`} className="h-24 w-full object-cover" />
                       {editingSpace.primary_image_media_id === mediaId && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                         <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
@@ -708,7 +708,7 @@ const RestaurantSpace: React.FC = () => {
         </div>
       )}
 
-      <MediaPickerModal isOpen={mediaPickerVisible} onClose={() => setMediaPickerVisible(false)} onSelect={handleMediaSelected} onSelectMultiple={handleMediaSelectedMultiple} title="Select Space Images" kind="image" source="restaurant" folder="spaces" allowMultiple />
+      <MediaPickerModal isOpen={mediaPickerVisible} onClose={() => setMediaPickerVisible(false)} onSelect={handleMediaSelected} onSelectMultiple={handleMediaSelectedMultiple} title="Select Map & Tour Images" kind="image" source="restaurant" folder="map-tour" folderAliases={['spaces', 'space', 'restaurant/spaces', 'restaurant/space']} allowMultiple />
     </div>
   );
 };

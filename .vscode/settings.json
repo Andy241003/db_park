@@ -164,9 +164,9 @@
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
   // Auto save
-  "files.autoSave": "onFocusChange",
+  "files.autoSave": "afterDelay",
   // Terminal
-  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "terminal.integrated.cwd": "${workspaceFolder}",
   // Bracket pair colorization
   "editor.bracketPairColorization.enabled": true,

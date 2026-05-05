@@ -127,7 +127,7 @@ def update_restaurant_contact(
         # Create new settings if doesn't exist
         settings = CafeSettings(
             tenant_id=current_user.tenant_id,
-            park_name="My Restaurant",
+            park_name="Adventure Park",
             primary_color="#6f4e37",
             settings_json={}
         )

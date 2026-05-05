@@ -796,6 +796,70 @@ class ParkServiceMedia(SQLModel, table=True):
 
 
 # ==========================================
+# Park Dining
+# ==========================================
+
+class ParkDiningItem(SQLModel, table=True):
+    """
+    Dining options in the park, stored separately from support services.
+    """
+    __tablename__ = "park_dining"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+
+    code: str = Field(index=True)
+    dining_type: str = Field(index=True)  # restaurant, cafe, food_court, snack_bar, beverage_kiosk, dessert_shop, other
+
+    availability: Optional[str] = None
+    price_information: Optional[str] = None
+
+    vr360_tour_url: Optional[str] = None
+    booking_url: Optional[str] = None
+
+    primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
+
+    is_active: bool = True
+    display_order: int = 0
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    translations: List["ParkDiningItemTranslation"] = Relationship(back_populates="dining_item")
+    media: List["ParkDiningItemMedia"] = Relationship(back_populates="dining_item")
+
+
+class ParkDiningItemTranslation(SQLModel, table=True):
+    __tablename__ = "park_dining_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    dining_id: int = Field(foreign_key="park_dining.id", index=True)
+    locale: str = Field(index=True)
+
+    name: str
+    description: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    dining_item: Optional[ParkDiningItem] = Relationship(back_populates="translations")
+
+
+class ParkDiningItemMedia(SQLModel, table=True):
+    __tablename__ = "park_dining_media"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    dining_id: int = Field(foreign_key="park_dining.id", index=True)
+    media_id: int = Field(foreign_key="media_files.id", index=True)
+
+    sort_order: int = 0
+    is_primary: bool = False
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    dining_item: Optional[ParkDiningItem] = Relationship(back_populates="media")
+
+
+# ==========================================
 # Park Attractions
 # ==========================================
 
@@ -1170,6 +1234,9 @@ CafeSpaceMedia = ParkSpaceMedia
 CafeService = ParkService
 CafeServiceTranslation = ParkServiceTranslation
 CafeServiceMedia = ParkServiceMedia
+CafeDiningItem = ParkDiningItem
+CafeDiningItemTranslation = ParkDiningItemTranslation
+CafeDiningItemMedia = ParkDiningItemMedia
 CafeAttraction = ParkAttraction
 CafeAttractionTranslation = ParkAttractionTranslation
 CafeAttractionMedia = ParkAttractionMedia
@@ -1206,6 +1273,9 @@ RestaurantSpaceMedia = ParkSpaceMedia
 RestaurantService = ParkService
 RestaurantServiceTranslation = ParkServiceTranslation
 RestaurantServiceMedia = ParkServiceMedia
+RestaurantDiningItem = ParkDiningItem
+RestaurantDiningItemTranslation = ParkDiningItemTranslation
+RestaurantDiningItemMedia = ParkDiningItemMedia
 RestaurantAttraction = ParkAttraction
 RestaurantAttractionTranslation = ParkAttractionTranslation
 RestaurantAttractionMedia = ParkAttractionMedia
@@ -1222,6 +1292,4 @@ RestaurantVisitorInfoCategory = ParkVisitorInfoCategory
 RestaurantVisitorInfoCategoryTranslation = ParkVisitorInfoCategoryTranslation
 RestaurantVisitorInfoItem = ParkVisitorInfoItem
 RestaurantVisitorInfoItemTranslation = ParkVisitorInfoItemTranslation
-
-
 

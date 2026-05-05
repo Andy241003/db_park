@@ -1357,6 +1357,36 @@ export const cafeServicesApi = {
   }
 };
 
+export const cafeDiningApi = {
+  getServices: async (): Promise<Service[]> => {
+    const response = await restaurantClient.get('/park/dining');
+    return response.data;
+  },
+
+  getService: async (id: number): Promise<Service> => {
+    const response = await restaurantClient.get(`/park/dining/${id}`);
+    return response.data;
+  },
+
+  createService: async (data: ServiceCreate): Promise<Service> => {
+    const response = await restaurantClient.post('/park/dining', data);
+    return response.data;
+  },
+
+  updateService: async (id: number, data: ServiceUpdate): Promise<Service> => {
+    const response = await restaurantClient.put(`/park/dining/${id}`, data);
+    return response.data;
+  },
+
+  deleteService: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/dining/${id}`);
+  },
+
+  reorderService: async (id: number, newOrder: number): Promise<void> => {
+    await restaurantClient.patch(`/park/dining/${id}/reorder?new_order=${newOrder}`);
+  },
+};
+
 // ==========================================
 // Audit Logs API
 // ==========================================
@@ -1677,6 +1707,7 @@ export default {
   achievements: cafeAchievementsApi,
   ticketTypes: cafeTicketTypesApi,
   services: cafeServicesApi,
+  dining: cafeDiningApi,
   spaces: cafeSpacesApi,
   contentSections: cafeContentSectionsApi,
   auditLogs: cafeAuditLogsApi,
@@ -1708,6 +1739,7 @@ export const restaurantPromotionsApi = cafePromotionsApi;
 export const restaurantAchievementsApi = cafeAchievementsApi;
 export const restaurantTicketTypesApi = cafeTicketTypesApi;
 export const restaurantServicesApi = cafeServicesApi;
+export const restaurantDiningApi = cafeDiningApi;
 export const restaurantActivityLogsApi = cafeActivityLogsApi;
 export const restaurantAuditLogsApi = cafeAuditLogsApi;
 export const restaurantSpacesApi = cafeSpacesApi;

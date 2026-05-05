@@ -58,7 +58,7 @@ interface IconFile {
 }
 
 interface MediaLibraryProps {
-  defaultSource?: 'travel' | 'vr_hotel' | '';
+  defaultSource?: 'travel' | 'vr_hotel' | 'restaurant' | '';
 }
 
 export default function MediaLibrary({ defaultSource = '' }: MediaLibraryProps) {

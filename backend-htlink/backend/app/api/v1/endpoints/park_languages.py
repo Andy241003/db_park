@@ -44,7 +44,7 @@ def get_or_create_settings(db: SessionDep, tenant_id: int) -> CafeSettings:
     if not settings:
         settings = CafeSettings(
             tenant_id=tenant_id,
-            park_name="My Restaurant",
+            park_name="Adventure Park",
             primary_color="#6f4e37",
             secondary_color="#d4a574",
             background_color="#ffffff",

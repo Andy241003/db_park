@@ -206,7 +206,7 @@ const RestaurantTenants: React.FC = () => {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-700 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
             >
               <FontAwesomeIcon icon={faGlobe} />
-              Restaurant Settings
+              Park Settings
             </Link>
           </div>
         </div>
