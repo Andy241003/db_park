@@ -35,6 +35,7 @@ import ParkDashboard from './pages/restaurant/Dashboard';
 import ParkDining from './pages/restaurant/Dining';
 import ParkEvents from './pages/restaurant/Events';
 import ParkGallery from './pages/restaurant/Gallery';
+import ParkGamesActivities from './pages/restaurant/GamesActivities';
 import ParkHome from './pages/restaurant/Home';
 import ParkIntroduction from './pages/restaurant/Introduction';
 import ParkLanguages from './pages/restaurant/Languages';
@@ -175,7 +176,7 @@ function App() {
                         <Route path="attractions" element={<ParkAttractions />} />
                         <Route path="events" element={<ParkEvents />} />
                         <Route path="schedule-events" element={<ParkEvents />} />
-                        <Route path="games-activities" element={<ParkEvents />} />
+                        <Route path="games-activities" element={<ParkGamesActivities />} />
                         <Route path="careers" element={<ParkCareers />} />
                         <Route path="promotions" element={<ParkPromotions />} />
                         <Route path="offers" element={<ParkPromotions />} />
@@ -237,5 +238,4 @@ function App() {
 }
 
 export default App;
-
 

@@ -843,6 +843,37 @@ export const cafeEventsApi = {
   },
 };
 
+export const cafeGamesActivitiesApi = {
+  getEvents: async (): Promise<CafeEvent[]> => {
+    const response = await restaurantClient.get('/park/games-activities/');
+    return response.data;
+  },
+
+  getEvent: async (id: number): Promise<CafeEvent> => {
+    const response = await restaurantClient.get(`/park/games-activities/${id}`);
+    return response.data;
+  },
+
+  createEvent: async (data: CafeEventCreate): Promise<CafeEvent> => {
+    const response = await restaurantClient.post('/park/games-activities/', data);
+    return response.data;
+  },
+
+  updateEvent: async (id: number, data: CafeEventUpdate): Promise<CafeEvent> => {
+    const response = await restaurantClient.put(`/park/games-activities/${id}`, data);
+    return response.data;
+  },
+
+  deleteEvent: async (id: number): Promise<void> => {
+    await restaurantClient.delete(`/park/games-activities/${id}`);
+  },
+
+  updateEventTranslations: async (id: number, translations: EventTranslation[]): Promise<CafeEvent> => {
+    const response = await restaurantClient.put(`/park/games-activities/${id}`, { translations });
+    return response.data;
+  },
+};
+
 // ==========================================
 // Careers API
 // ==========================================
@@ -1702,6 +1733,7 @@ export default {
   branches: cafeBranchesApi,
   attractions: cafeAttractionsApi,
   events: cafeEventsApi,
+  gamesActivities: cafeGamesActivitiesApi,
   careers: cafeCareersApi,
   promotions: cafePromotionsApi,
   achievements: cafeAchievementsApi,
@@ -1734,6 +1766,7 @@ export const restaurantMenuApi = cafeMenuApi;
 export const restaurantBranchesApi = cafeBranchesApi;
 export const restaurantAttractionsApi = cafeAttractionsApi;
 export const restaurantEventsApi = cafeEventsApi;
+export const restaurantGamesActivitiesApi = cafeGamesActivitiesApi;
 export const restaurantCareersApi = cafeCareersApi;
 export const restaurantPromotionsApi = cafePromotionsApi;
 export const restaurantAchievementsApi = cafeAchievementsApi;

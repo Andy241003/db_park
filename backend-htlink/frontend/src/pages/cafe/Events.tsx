@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import MediaPickerModal from '../../components/MediaPickerModal';
 import {
     restaurantEventsApi,
+    restaurantGamesActivitiesApi,
     restaurantLanguagesApi,
     restaurantSettingsApi,
     type EventTranslation,
@@ -32,6 +33,13 @@ const FIELD_CLASS = 'w-full rounded-md border border-slate-300 px-4 py-2 focus:b
 const SECTION_CLASS = 'rounded-lg bg-white p-6 shadow';
 
 type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+type EventsPageMode = 'events' | 'games';
+
+type EventsApi = typeof restaurantEventsApi;
+
+interface RestaurantEventsProps {
+  pageMode?: EventsPageMode;
+}
 
 type EventLocalizedFields = {
   title: string;
@@ -143,7 +151,16 @@ const getStatusBadgeClass = (status: EventStatus) => {
   }
 };
 
-const RestaurantEvents: React.FC = () => {
+const RestaurantEvents: React.FC<RestaurantEventsProps> = ({ pageMode = 'events' }) => {
+  const isGamesPage = pageMode === 'games';
+  const dataApi: EventsApi = isGamesPage ? restaurantGamesActivitiesApi : restaurantEventsApi;
+  const sectionLabel = isGamesPage ? 'Games & Activities' : 'Events';
+  const itemLabel = isGamesPage ? 'Game / Activity' : 'Event';
+  const settingsPrefix = isGamesPage ? 'games_activities' : 'events';
+  const mediaFolder = isGamesPage ? 'games-activities' : 'events';
+  const mediaAliases = isGamesPage
+    ? ['games', 'activities', 'game', 'activity', 'restaurant/games', 'restaurant/activities']
+    : ['event', 'restaurant/events', 'restaurant/event'];
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<RestaurantEvent[]>([]);
   const [supportedLanguages, setSupportedLanguages] = useState<string[]>(['vi', 'en']);
@@ -166,7 +183,7 @@ const RestaurantEvents: React.FC = () => {
     try {
       setLoading(true);
       const [eventData, languageCodes, settings] = await Promise.all([
-        restaurantEventsApi.getEvents(),
+        dataApi.getEvents(),
         restaurantLanguagesApi.getLanguages(),
         restaurantSettingsApi.getSettings(),
       ]);
@@ -177,21 +194,21 @@ const RestaurantEvents: React.FC = () => {
       setSupportedLanguages(locales);
       setCurrentLocale((previous) => (locales.includes(previous) ? previous : locales[0]));
       setEvents(eventData);
-      setIsDisplaying(typeof settingsJson.events_is_displaying === 'boolean' ? settingsJson.events_is_displaying : true);
-      setVr360Link(typeof settingsJson.events_vr360_link === 'string' ? settingsJson.events_vr360_link : '');
-      setVrTitle(typeof settingsJson.events_vr_title === 'string' ? settingsJson.events_vr_title : '');
+      setIsDisplaying(typeof settingsJson[`${settingsPrefix}_is_displaying`] === 'boolean' ? Boolean(settingsJson[`${settingsPrefix}_is_displaying`]) : true);
+      setVr360Link(typeof settingsJson[`${settingsPrefix}_vr360_link`] === 'string' ? String(settingsJson[`${settingsPrefix}_vr360_link`]) : '');
+      setVrTitle(typeof settingsJson[`${settingsPrefix}_vr_title`] === 'string' ? String(settingsJson[`${settingsPrefix}_vr_title`]) : '');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to load events');
+      toast.error(error.message || `Failed to load ${sectionLabel.toLowerCase()}`);
     } finally {
       setLoading(false);
     }
   };
   const loadEvents = async () => {
     try {
-      const eventData = await restaurantEventsApi.getEvents();
+      const eventData = await dataApi.getEvents();
       setEvents(eventData);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to refresh events');
+      toast.error(error.message || `Failed to refresh ${sectionLabel.toLowerCase()}`);
     }
   };
 
@@ -258,18 +275,18 @@ const RestaurantEvents: React.FC = () => {
   };
 
   const handleDelete = async (eventId: number) => {
-    const confirmed = window.confirm('Delete this event? This action cannot be undone.');
+    const confirmed = window.confirm(`Delete this ${itemLabel.toLowerCase()}? This action cannot be undone.`);
     if (!confirmed) return;
 
     try {
-      await restaurantEventsApi.deleteEvent(eventId);
-      toast.success('Event deleted');
+      await dataApi.deleteEvent(eventId);
+      toast.success(`${itemLabel} deleted`);
       if (editingEvent?.id === eventId) {
         setEditingEvent(null);
       }
       await loadEvents();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete event');
+      toast.error(error.message || `Failed to delete ${itemLabel.toLowerCase()}`);
     }
   };
 
@@ -346,12 +363,12 @@ const RestaurantEvents: React.FC = () => {
       .filter((translation) => translation.title || translation.description || translation.details);
 
     if (translations.length === 0 || !translations.some((translation) => translation.title)) {
-      toast.error('Please add at least one event title');
+      toast.error(`Please add at least one ${itemLabel.toLowerCase()} title`);
       return;
     }
 
     if (!editingEvent.code.trim()) {
-      toast.error('Event code is required');
+      toast.error(`${itemLabel} code is required`);
       return;
     }
 
@@ -382,16 +399,16 @@ const RestaurantEvents: React.FC = () => {
     try {
       setSavingEvent(true);
       if (editingEvent.id) {
-        await restaurantEventsApi.updateEvent(editingEvent.id, payload);
-        toast.success('Event updated');
+        await dataApi.updateEvent(editingEvent.id, payload);
+        toast.success(`${itemLabel} updated`);
       } else {
-        await restaurantEventsApi.createEvent(payload);
-        toast.success('Event created');
+        await dataApi.createEvent(payload);
+        toast.success(`${itemLabel} created`);
       }
       setEditingEvent(null);
       await loadEvents();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save event');
+      toast.error(error.message || `Failed to save ${itemLabel.toLowerCase()}`);
     } finally {
       setSavingEvent(false);
     }
@@ -405,10 +422,10 @@ const RestaurantEvents: React.FC = () => {
 
       if (field === 'link') {
         const embedUrl = convertToEmbedUrl(value);
-        updates.events_vr360_link = embedUrl;
+        updates[`${settingsPrefix}_vr360_link`] = embedUrl;
         setVr360Link(embedUrl);
       } else {
-        updates.events_vr_title = value;
+        updates[`${settingsPrefix}_vr_title`] = value;
         setVrTitle(value);
       }
 
@@ -428,11 +445,11 @@ const RestaurantEvents: React.FC = () => {
       await restaurantSettingsApi.updateSettings({
         settings_json: {
           ...currentSettings.settings_json,
-          events_is_displaying: nextValue,
+          [`${settingsPrefix}_is_displaying`]: nextValue,
         },
       });
       setIsDisplaying(nextValue);
-      toast.success(nextValue ? 'Events section enabled' : 'Events section hidden');
+      toast.success(nextValue ? `${sectionLabel} section enabled` : `${sectionLabel} section hidden`);
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to update display status');
     } finally {
@@ -444,7 +461,7 @@ const RestaurantEvents: React.FC = () => {
     <div className="space-y-6">
       <div className={SECTION_CLASS}>
         <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
-          <h2 className="text-xl font-bold text-slate-800">Display Status - Events Section</h2>
+          <h2 className="text-xl font-bold text-slate-800">Display Status - {sectionLabel} Section</h2>
           <div className="flex items-center gap-3">
             <span className={`text-sm font-medium ${isDisplaying ? 'text-emerald-600' : 'text-slate-500'}`}>
               {isDisplaying ? 'Displaying' : 'Hidden'}
@@ -464,7 +481,7 @@ const RestaurantEvents: React.FC = () => {
 
         <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
           <FontAwesomeIcon icon={faInfoCircle} className="mt-0.5 text-blue-600" />
-          <span>When display is turned off, the Events section will not appear on the website, but you can still manage event content here.</span>
+          <span>When display is turned off, the {sectionLabel} section will not appear on the website, but you can still manage content here.</span>
         </div>
       </div>
 
@@ -485,10 +502,10 @@ const RestaurantEvents: React.FC = () => {
               placeholder="https://example.com/vr360-tour or https://youtube.com/watch?v=..."
               disabled={savingVR}
             />
-            <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this events landing experience, if available.</p>
+            <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this {sectionLabel.toLowerCase()} landing experience, if available.</p>
             <p className="mt-2 flex items-start gap-2 text-sm text-slate-500">
               <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 text-slate-500" />
-              <span>Enter a 360 panorama image URL or YouTube video URL for the Events landing experience.</span>
+              <span>Enter a 360 panorama image URL or YouTube video URL for the {sectionLabel} landing experience.</span>
             </p>
           </div>
 
@@ -517,7 +534,7 @@ const RestaurantEvents: React.FC = () => {
                     src={vr360Link}
                     className="absolute left-0 top-0 h-full w-full"
                     allowFullScreen
-                    title="Events VR360 Preview"
+                    title={`${sectionLabel} VR360 Preview`}
                     allow="xr-spatial-tracking; gyroscope; accelerometer"
                   />
                 </div>
@@ -542,7 +559,7 @@ const RestaurantEvents: React.FC = () => {
         <div className={SECTION_CLASS}>
           <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Events Management</h2>
+              <h2 className="text-xl font-bold text-slate-800">{sectionLabel} Management</h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <select
@@ -562,15 +579,15 @@ const RestaurantEvents: React.FC = () => {
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700"
               >
                 <FontAwesomeIcon icon={faPlus} />
-                Add New Event
+                Add New {itemLabel}
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="rounded-lg border border-dashed border-slate-300 px-6 py-12 text-center text-slate-500">Loading events...</div>
+            <div className="rounded-lg border border-dashed border-slate-300 px-6 py-12 text-center text-slate-500">Loading {sectionLabel.toLowerCase()}...</div>
           ) : filteredEvents.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-300 px-6 py-12 text-center text-slate-500">No events found for the current filter.</div>
+            <div className="rounded-lg border border-dashed border-slate-300 px-6 py-12 text-center text-slate-500">No {sectionLabel.toLowerCase()} found for the current filter.</div>
           ) : (
             <div className="space-y-4">
               {filteredEvents.map((event) => {
@@ -634,7 +651,7 @@ const RestaurantEvents: React.FC = () => {
                           type="button"
                           onClick={() => handleEdit(event)}
                           className="flex items-center gap-2 rounded-md border border-slate-600 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-50"
-                          title="Edit event"
+                          title={`Edit ${itemLabel.toLowerCase()}`}
                         >
                           <FontAwesomeIcon icon={faPenToSquare} />
                           Edit
@@ -643,7 +660,7 @@ const RestaurantEvents: React.FC = () => {
                           type="button"
                           onClick={() => void handleDelete(event.id)}
                           className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-                          title="Delete event"
+                          title={`Delete ${itemLabel.toLowerCase()}`}
                         >
                           <FontAwesomeIcon icon={faTrashCan} />
                           Delete
@@ -663,7 +680,7 @@ const RestaurantEvents: React.FC = () => {
           <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white p-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">{editingEvent.id ? 'Edit Event' : 'Add New Event'}</h3>
+                <h3 className="text-xl font-bold text-slate-800">{editingEvent.id ? `Edit ${itemLabel}` : `Add New ${itemLabel}`}</h3>
               </div>
               <button
                 type="button"
@@ -692,13 +709,13 @@ const RestaurantEvents: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className={LABEL_CLASS}>Event Title *</label>
+                  <label className={LABEL_CLASS}>{itemLabel} Title *</label>
                   <input
                     type="text"
                     className={FIELD_CLASS}
                     value={currentTranslation.title}
                     onChange={(e) => handleLocalizedFieldChange('title', e.target.value)}
-                    placeholder="Enter event title..."
+                    placeholder={`Enter ${itemLabel.toLowerCase()} title...`}
                   />
                 </div>
 
@@ -781,7 +798,7 @@ const RestaurantEvents: React.FC = () => {
                     onChange={(e) => handleFieldChange('vr360_url', e.target.value)}
                     placeholder="https://example.com/vr360-tour or https://youtube.com/watch?v=..."
                   />
-                  <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this event item, if available.</p>
+                  <p className="mt-1 text-xs text-slate-500">Enter the VR URL for this {itemLabel.toLowerCase()}, if available.</p>
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Status</label>
@@ -795,7 +812,7 @@ const RestaurantEvents: React.FC = () => {
               </div>
 
               <div className="mt-4">
-                <label className={LABEL_CLASS}>Event Details</label>
+                <label className={LABEL_CLASS}>{itemLabel} Details</label>
                 <textarea
                   rows={5}
                   className={FIELD_CLASS}
@@ -807,8 +824,8 @@ const RestaurantEvents: React.FC = () => {
 
               <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
                 <div>
-                  <h3 className="font-semibold text-slate-800">Featured Event</h3>
-                  <p className="text-sm text-slate-500">Highlight this event in featured sections on the website.</p>
+                  <h3 className="font-semibold text-slate-800">Featured {itemLabel}</h3>
+                  <p className="text-sm text-slate-500">Highlight this {itemLabel.toLowerCase()} in featured sections on the website.</p>
                 </div>
                 <label className="relative inline-flex cursor-pointer items-center">
                   <input type="checkbox" className="peer sr-only" checked={editingEvent.is_featured} onChange={(e) => handleFieldChange('is_featured', e.target.checked)} />
@@ -817,12 +834,12 @@ const RestaurantEvents: React.FC = () => {
               </div>
 
               <div className="mt-6">
-                <label className={`${LABEL_CLASS} flex items-center gap-2`}><FontAwesomeIcon icon={faImages} />Event Images</label>
+                <label className={`${LABEL_CLASS} flex items-center gap-2`}><FontAwesomeIcon icon={faImages} />{itemLabel} Images</label>
                 <button type="button" onClick={() => setMediaPickerMode('gallery')} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"><FontAwesomeIcon icon={faImages} />Select Images</button>
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {editingEvent.media_ids.map((mediaId) => (
                     <div key={mediaId} className="group relative overflow-hidden rounded-md border border-slate-200 bg-slate-50">
-                      <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`Event media ${mediaId}`} className="h-24 w-full object-cover" />
+                      <img src={`${getApiBaseUrl()}/media/${mediaId}/view`} alt={`${itemLabel} media ${mediaId}`} className="h-24 w-full object-cover" />
                       {editingEvent.primary_image_media_id === mediaId && <div className="absolute left-2 top-2 rounded bg-green-600 px-2 py-1 text-xs font-medium text-white">Primary</div>}
                       <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                         <button type="button" onClick={() => handleRemoveMedia(mediaId)} className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700">Remove</button>
@@ -857,22 +874,22 @@ const RestaurantEvents: React.FC = () => {
         isOpen={mediaPickerMode === 'primary'}
         onClose={() => setMediaPickerMode(null)}
         onSelect={handlePrimaryMediaSelected}
-        title="Select Event Image"
+        title={`Select ${itemLabel} Image`}
         kind="image"
         source="restaurant"
-        folder="events"
-        folderAliases={['event', 'restaurant/events', 'restaurant/event']}
+        folder={mediaFolder}
+        folderAliases={mediaAliases}
       />
 
       <MediaPickerModal
         isOpen={mediaPickerMode === 'gallery'}
         onClose={() => setMediaPickerMode(null)}
         onSelectMultiple={handleGalleryMediaSelected}
-        title="Select Event Gallery Images"
+        title={`Select ${itemLabel} Gallery Images`}
         kind="image"
         source="restaurant"
-        folder="events"
-        folderAliases={['event', 'restaurant/events', 'restaurant/event']}
+        folder={mediaFolder}
+        folderAliases={mediaAliases}
         allowMultiple
       />
     </div>

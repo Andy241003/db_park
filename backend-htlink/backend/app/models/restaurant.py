@@ -417,6 +417,78 @@ class ParkEventMedia(SQLModel, table=True):
 
 
 # ==========================================
+# Park Games & Activities
+# ==========================================
+
+class ParkGameActivity(SQLModel, table=True):
+    """
+    Games and activity programs, stored separately from schedule/events.
+    """
+    __tablename__ = "park_games_activities"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tenant_id: int = Field(foreign_key="tenants.id", index=True)
+    code: str = Field(unique=True, index=True)
+
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+
+    location_id: Optional[int] = Field(default=None, foreign_key="park_locations.id")
+    space_id: Optional[int] = Field(default=None, foreign_key="park_spaces.id")
+    location_text: Optional[str] = None
+
+    registration_url: Optional[str] = None
+    max_participants: Optional[int] = None
+
+    primary_image_media_id: Optional[int] = Field(default=None, foreign_key="media_files.id")
+
+    status: str = "upcoming"
+    is_featured: bool = False
+    display_order: int = 0
+
+    attributes_json: Optional[dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    translations: List["ParkGameActivityTranslation"] = Relationship(back_populates="game_activity")
+    media: List["ParkGameActivityMedia"] = Relationship(back_populates="game_activity")
+
+
+class ParkGameActivityTranslation(SQLModel, table=True):
+    __tablename__ = "park_game_activity_translations"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    game_activity_id: int = Field(foreign_key="park_games_activities.id", index=True)
+    locale: str = Field(index=True)
+
+    title: str
+    description: Optional[str] = None
+    details: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    game_activity: Optional[ParkGameActivity] = Relationship(back_populates="translations")
+
+
+class ParkGameActivityMedia(SQLModel, table=True):
+    __tablename__ = "park_game_activity_media"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    game_activity_id: int = Field(foreign_key="park_games_activities.id", index=True)
+    media_id: int = Field(foreign_key="media_files.id", index=True)
+
+    is_primary: bool = False
+    sort_order: int = 0
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    game_activity: Optional[ParkGameActivity] = Relationship(back_populates="media")
+
+
+# ==========================================
 # Restaurant Careers
 # ==========================================
 
@@ -1219,6 +1291,9 @@ CafeMenuItemMedia = ParkMenuItemMedia
 CafeEvent = ParkEvent
 CafeEventTranslation = ParkEventTranslation
 CafeEventMedia = ParkEventMedia
+CafeGameActivity = ParkGameActivity
+CafeGameActivityTranslation = ParkGameActivityTranslation
+CafeGameActivityMedia = ParkGameActivityMedia
 CafeCareer = ParkCareer
 CafeCareerTranslation = ParkCareerTranslation
 CafeCareerMedia = ParkCareerMedia
@@ -1258,6 +1333,9 @@ RestaurantMenuItemMedia = ParkMenuItemMedia
 RestaurantEvent = ParkEvent
 RestaurantEventTranslation = ParkEventTranslation
 RestaurantEventMedia = ParkEventMedia
+RestaurantGameActivity = ParkGameActivity
+RestaurantGameActivityTranslation = ParkGameActivityTranslation
+RestaurantGameActivityMedia = ParkGameActivityMedia
 RestaurantCareer = ParkCareer
 RestaurantCareerTranslation = ParkCareerTranslation
 RestaurantCareerMedia = ParkCareerMedia
@@ -1292,4 +1370,3 @@ RestaurantVisitorInfoCategory = ParkVisitorInfoCategory
 RestaurantVisitorInfoCategoryTranslation = ParkVisitorInfoCategoryTranslation
 RestaurantVisitorInfoItem = ParkVisitorInfoItem
 RestaurantVisitorInfoItemTranslation = ParkVisitorInfoItemTranslation
-

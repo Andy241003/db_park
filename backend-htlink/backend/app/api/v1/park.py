@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     park_content_sections,
     park_dining,
     park_events,
+    park_games_activities,
     park_languages,
     park_promotions,
     park_services,
@@ -40,6 +41,7 @@ park_router.include_router(park_promotions.router, prefix="/promotions")
 
 # Content and operations
 park_router.include_router(park_events.router, prefix="/events")
+park_router.include_router(park_games_activities.router, prefix="/games-activities")
 park_router.include_router(park_careers.router, prefix="/careers")
 park_router.include_router(park_content_sections.router, prefix="/content-sections")
 park_router.include_router(park_achievements.router, prefix="/achievements")
