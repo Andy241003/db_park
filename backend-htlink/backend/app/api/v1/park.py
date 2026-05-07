@@ -29,7 +29,6 @@ park_router.include_router(park_languages.router)
 
 # Park structure
 park_router.include_router(park_branches.router, prefix="/locations")
-park_router.include_router(park_branches.router, prefix="/branches")
 park_router.include_router(park_spaces.router, prefix="/spaces")
 park_router.include_router(park_attractions.router, prefix="/attractions")
 
